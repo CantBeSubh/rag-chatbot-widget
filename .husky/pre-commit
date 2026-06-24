@@ -1,0 +1,1 @@
+cd backend && make lint && make format-check
