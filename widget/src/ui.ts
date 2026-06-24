@@ -1,17 +1,17 @@
 export interface WidgetElements {
-  shadow: ShadowRoot;
-  panel: HTMLElement;
+  shadow: ShadowRoot
+  panel: HTMLElement
 }
 
 export function buildWidget(): WidgetElements {
-  const host = document.createElement('div');
-  host.id = 'rag-widget-host';
-  host.style.cssText = 'position: fixed; bottom: 24px; right: 24px; z-index: 99999;';
-  document.body.appendChild(host);
+  const host = document.createElement('div')
+  host.id = 'rag-widget-host'
+  host.style.cssText = 'position: fixed; bottom: 24px; right: 24px; z-index: 99999;'
+  document.body.appendChild(host)
 
-  const shadow = host.attachShadow({ mode: 'closed' });
+  const shadow = host.attachShadow({ mode: 'closed' })
 
-  const style = document.createElement('style');
+  const style = document.createElement('style')
   style.textContent = `
     * { box-sizing: border-box; font-family: system-ui, sans-serif; }
 
@@ -34,24 +34,24 @@ export function buildWidget(): WidgetElements {
       border: 1px solid #e5e7eb;
     }
     #chat-panel.open { display: flex; }
-  `;
-  shadow.appendChild(style);
+  `
+  shadow.appendChild(style)
 
-  const bubble = document.createElement('button');
-  bubble.id = 'bubble';
-  bubble.innerHTML = '💬';
-  bubble.setAttribute('aria-label', 'Open chat');
-  shadow.appendChild(bubble);
+  const bubble = document.createElement('button')
+  bubble.id = 'bubble'
+  bubble.innerHTML = '💬'
+  bubble.setAttribute('aria-label', 'Open chat')
+  shadow.appendChild(bubble)
 
-  const panel = document.createElement('div');
-  panel.id = 'chat-panel';
-  panel.innerHTML = '<p style="padding:16px;color:#6b7280;">Chat coming in M1-D3</p>';
-  shadow.appendChild(panel);
+  const panel = document.createElement('div')
+  panel.id = 'chat-panel'
+  panel.innerHTML = '<p style="padding:16px;color:#6b7280;">Chat coming in M1-D3</p>'
+  shadow.appendChild(panel)
 
   bubble.addEventListener('click', () => {
-    panel.classList.toggle('open');
-    bubble.innerHTML = panel.classList.contains('open') ? '✕' : '💬';
-  });
+    panel.classList.toggle('open')
+    bubble.innerHTML = panel.classList.contains('open') ? '✕' : '💬'
+  })
 
-  return { shadow, panel };
+  return { shadow, panel }
 }
