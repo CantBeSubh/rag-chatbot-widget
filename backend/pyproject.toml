@@ -1,0 +1,47 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.112.1",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.19",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # Pyflakes
+    "I",    # isort (import sorting)
+    "B",    # flake8-bugbear (common bugs/design issues)
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade (modern syntax for target Python)
+    "ARG",  # flake8-unused-arguments
+    "SIM",  # flake8-simplify
+    "RUF",  # Ruff-specific rules
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# Allow FastAPI's default-argument injection pattern, e.g. `q: str = Query(None)`,
+# without disabling B008 (function-call-in-default-argument) globally.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Header",
+    "fastapi.Cookie",
+    "fastapi.Form",
+    "fastapi.File",
+    "fastapi.Security",
+]
