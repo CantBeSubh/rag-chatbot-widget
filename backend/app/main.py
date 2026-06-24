@@ -1,8 +1,15 @@
+import logging
+
 from fastapi import Depends, FastAPI
 
+from .core.database import supabase
+from .core.logging import setup_logging
 from .dependencies import get_query_token, get_token_header
 from .internal import admin
 from .routers import items, users
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 app = FastAPI(dependencies=[Depends(get_query_token)])
 
@@ -16,6 +23,12 @@ app.include_router(
     dependencies=[Depends(get_token_header)],
     responses={418: {"description": "I'm a teapot"}},
 )
+
+
+@app.on_event("startup")
+async def verify_db():
+    result = supabase.table("tenants").select("id").limit(1).execute()
+    logger.info("Supabase connected: %s", result)
 
 
 @app.get("/")
