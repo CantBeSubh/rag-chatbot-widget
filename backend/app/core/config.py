@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     SUPABASE_URL: str
     SUPABASE_KEY: str
+    SUPABASE_SCHEMA: str = "public"
 
     ZILLIZ_URI: str = ""
     ZILLIZ_TOKEN: str = ""

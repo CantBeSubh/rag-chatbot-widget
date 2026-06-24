@@ -2,6 +2,7 @@ import logging
 
 from fastapi import Depends, FastAPI
 
+from .core.config import settings
 from .core.database import supabase
 from .core.logging import setup_logging
 from .dependencies import get_query_token, get_token_header
@@ -27,8 +28,14 @@ app.include_router(
 
 @app.on_event("startup")
 async def verify_db():
-    result = supabase.table("tenants").select("id").limit(1).execute()
-    logger.info("Supabase connected: %s", result)
+    result = (
+        supabase.schema(settings.SUPABASE_SCHEMA)
+        .table("tenants")
+        .select("id")
+        .limit(1)
+        .execute()
+    )
+    logger.info(f"Supabase connected to {settings.SUPABASE_SCHEMA} schema: {result}")
 
 
 @app.get("/")
