@@ -1,0 +1,24 @@
+info:
+  name: RAG Chat
+  type: http
+  seq: 2
+
+http:
+  method: post
+  url: http://localhost:8000/chat
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "question": "What is the capital of France?"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: false
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
