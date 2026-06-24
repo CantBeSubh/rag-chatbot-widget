@@ -7,8 +7,6 @@ http:
   method: POST
   url: http://localhost:8000/ingest/file
   headers:
-    - name: Authorization
-      value: Bearer a07763cb-8d73-4abf-8d1e-e53d5e6eb7ec
     - name: Content-Type
       value: multipart/form-data
   body:

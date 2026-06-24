@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from .core.config import settings
 from .core.database import supabase
 from .core.logging import setup_logging
-from .routers import ingest
+from .routers import chat, ingest
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 app.include_router(ingest.router)
+app.include_router(chat.router)
 
 
 @app.on_event("startup")
