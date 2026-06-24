@@ -209,3 +209,54 @@ same pattern as CAN-28.
   `tests/core/test_extractors.py` (4), `tests/core/test_chunker.py` (4),
   `tests/test_dependencies.py` (2), `tests/routers/test_ingest.py` (3).
 - `uv run ruff check .` / `ruff format --check .` clean.
+
+## 2026-06-24/25 — CAN-32: Widget scaffold (TypeScript + bun + Shadow DOM)
+
+### Context
+
+Linear ticket CAN-32 specified esbuild + npm for the widget's build pipeline;
+deviated to `bun build` (native bundler) + bun as the package manager instead,
+per this repo's standing preference for bun over npm/esbuild for JS tooling.
+`widget/` is a fully standalone bun package — its own `package.json`/
+`bun.lock`, independent of the repo root and `backend/`.
+
+### Observations
+
+- Split the ticket's single `widget.ts` sample into three modules:
+  `auth.ts` (`getApiKey()`), `ui.ts` (`buildWidget()` — Shadow DOM host,
+  bubble, panel), `widget.ts` (bundle entry point, composes the other two on
+  `DOMContentLoaded`, exposes `window.__ragWidget`). All three get inlined
+  into one `dist/widget.js` by `bun build`'s bundler — confirmed by grepping
+  the built output for `rag-widget-host`.
+- No test framework / unit tests for this scaffold — there's no testable
+  logic yet (pure DOM construction + a `DOMContentLoaded` listener). Gate per
+  task was `bun run typecheck && bun run lint && bun run format:check`
+  (+ `bun run build` where relevant); full behavioral verification (bubble
+  renders, click toggles, Shadow DOM actually isolates styles) is a single
+  manual browser pass at the end against `test.html`, not automated.
+- `test.html` intentionally ships a hostile host-page rule
+  (`button { background: red !important; }`) in `<head>` — the point isn't
+  just that a shadow root exists, but that the bubble's purple
+  (`#6366f1`/`#4f46e5` hover) survives a page-level rule that would otherwise
+  win on specificity.
+- Shadow DOM mode is `'closed'` (not `'open'`) — deliberate: the host page's
+  own JS shouldn't be able to reach widget internals via `element.shadowRoot`.
+- Extended `.husky/pre-commit` to also run `widget`'s
+  `typecheck && lint && format:check` (previously backend-only), so the
+  widget's checks are enforced the same way as the backend's.
+
+### State at end of session
+
+- `widget/src/auth.ts`, `ui.ts`, `widget.ts` implemented; `bun run build`
+  produces `dist/widget.js` (1.89 KB minified) with no TypeScript errors.
+- `widget/test.html` added as the manual verification page; all done-criteria
+  from CAN-32 (bubble renders, click toggles panel, closed shadow root visible
+  in DevTools nested under `#rag-widget-host`, purple not overridden by the
+  page's `red !important` rule) confirmed manually in-browser by the user.
+- `typecheck`/`lint`/`format:check`/`build` all clean; `dist/` and
+  `node_modules/` gitignored (build artifact, never committed).
+- Added `widget/README.md` covering structure, build/lint scripts, embedding
+  the script tag, and the manual verification checklist.
+- CAN-32 fully done per its six-task implementation plan
+  (`docs/superpowers/plans/2026-06-24-widget-scaffold.md`), including the
+  pre-commit hook task.
