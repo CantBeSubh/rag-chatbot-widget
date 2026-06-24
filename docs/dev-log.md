@@ -3,6 +3,7 @@
 ## 2026-06-24 — Backend config/database wiring + Supabase schema setup
 
 ### Context
+
 `backend/app/core/config.py` was empty and `backend/app/core/database.py` called
 `create_client(settings.SUPABASE_URL, settings.SUPABASE_KEY)` with no `settings`
 object to back it. Goal: make the two work together and get the app actually
@@ -80,6 +81,7 @@ connecting to Supabase.
     for the user to run directly in the SQL Editor.
 
 ### State at end of session
+
 - `config.py`, `database.py`, `main.py`, `core/logging.py` updated and verified
   importable end-to-end (`import app.main` succeeds).
 - `.env` / `.env.example` updated with `SUPABASE_SCHEMA`.
@@ -89,6 +91,7 @@ connecting to Supabase.
 ## 2026-06-24 — CAN-28: Zilliz vector store + embedding model (TDD)
 
 ### Context
+
 Linear ticket CAN-28 specified `backend/core/vector_store.py` and
 `backend/core/embedder.py` with sample code using Poetry and absolute imports
 (`from core.config import settings`) — both wrong for this repo (`uv`, and
@@ -124,6 +127,7 @@ verification script.
   `Makefile`.
 
 ### State at end of session
+
 - `app/core/embedder.py`: loads `BAAI/bge-base-en-v1.5` once at module level,
   `embed(texts) -> list[list[float]]`, normalized embeddings (768-dim).
 - `app/core/vector_store.py`: `MilvusClient` against the real Zilliz cluster,
@@ -147,3 +151,61 @@ verification script.
   function named `search` or `hybrid_search` without ambiguity. Updated the
   one caller (`tests/test_round_trip.py`) and re-ran lint/tests to confirm
   nothing else referenced the old name.
+
+## 2026-06-24 — CAN-29: File ingestion pipeline (TDD)
+
+### Context
+
+Linear ticket CAN-29 specified `backend/core/extractors.py`/`chunker.py`/`routers/ingest.py`
+with sample code using Poetry, absolute imports, and a `tenant.single().execute()` auth
+lookup — all adjusted for this repo's `uv` + relative-import + app-package conventions,
+same pattern as CAN-28.
+
+### Observations
+
+- **Removed leftover FastAPI tutorial scaffolding.** `main.py` had a global
+  `Depends(get_query_token)` requiring a hardcoded `?token=jessica` query param on every
+  request, plus example `users`/`items`/`admin` routers from the `uv-fastapi-example`
+  bootstrap — all unrelated to this product and would have gated the new ingest endpoint
+  behind a fake token. Deleted `app/routers/users.py`, `app/routers/items.py`,
+  `app/internal/`, and the fake-token functions in `app/dependencies.py`; `main.py` no
+  longer has any app-level `dependencies=[...]`.
+- **DOCX support dropped from scope** — user decision; ticket asked for PDF/DOCX/TXT but
+  `extract_text` only handles `.pdf`, `.txt`, `.md`. `.docx` (and anything else) raises
+  `ValueError: Unsupported file type`.
+- **Confirmed live `testing` schema permissions are fully resolved** (the `42501`/
+  `PGRST106` errors from the earlier config/database session are gone) — verified
+  SELECT/INSERT/UPDATE/DELETE all work against `testing.tenants`/`testing.sources` via a
+  throwaway row round-trip before writing any test code.
+- **Got exact column names via the PostgREST OpenAPI spec** (`GET {SUPABASE_URL}/rest/v1/`
+  with `Accept-Profile: testing`) rather than guessing from the ticket's sample code:
+  `tenants.api_key` is `uuid` (not text), defaulting to `gen_random_uuid()`; `sources` has
+  `type`, `url`, `filename`, `status` (default `"queued"`), `chunk_count` (default `0`),
+  `error_message`.
+- **Ticket's sample ingest code never calls `create_collection_if_not_exists()`** before
+  `upsert()` — a real gap, since a brand-new tenant's Zilliz collection doesn't exist yet
+  on first upload. Added the call explicitly, matching how `tests/test_round_trip.py`
+  already does it.
+- **`get_current_tenant_id` is a plain sync function, not `async def`** — no
+  `pytest-asyncio`/`anyio` plugin is installed, and `supabase-py`'s client is itself
+  synchronous, so making it async would only add complexity (and silently no-op in tests
+  without a plugin to actually await it). FastAPI runs sync dependencies fine either way.
+- **PDF test fixture is a real file**, not a hand-rolled minimal PDF byte string — a
+  first attempt at constructing a minimal valid PDF inline (to avoid committing a binary)
+  hit `PdfReadError: startxref not found` on the first try; the user opted to just commit
+  a real PDF (`tests/assets/vectorshift_resume.pdf`) instead of debugging PDF internals
+  further.
+
+### State at end of session
+
+- `app/core/extractors.py`: `extract_text(file_path, filename) -> str`, PDF/TXT/MD only.
+- `app/core/chunker.py`: `chunk_text(text) -> list[str]`, 512-char chunks / 50-char overlap
+  via `RecursiveCharacterTextSplitter`.
+- `app/dependencies.py`: `get_current_tenant_id(authorization) -> str`, 401s on unknown
+  API key.
+- `app/routers/ingest.py`: `POST /ingest/file`, mounted in `main.py` with no global auth
+  dependency.
+- Tests (all passing against live Supabase `testing` schema + live Zilliz cluster):
+  `tests/core/test_extractors.py` (4), `tests/core/test_chunker.py` (4),
+  `tests/test_dependencies.py` (2), `tests/routers/test_ingest.py` (3).
+- `uv run ruff check .` / `ruff format --check .` clean.

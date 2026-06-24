@@ -1,0 +1,28 @@
+info:
+  name: Ingest File
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:8000/ingest/file
+  headers:
+    - name: Authorization
+      value: Bearer a07763cb-8d73-4abf-8d1e-e53d5e6eb7ec
+    - name: Content-Type
+      value: multipart/form-data
+  body:
+    type: multipart-form
+    data:
+      - name: file
+        type: file
+        value:
+          - /Users/subhr/Documents/github/rag-chatbot-widget/backend/tests/assets/vectorshift_resume.pdf
+        contentType: application/pdf
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
