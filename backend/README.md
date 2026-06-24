@@ -1,3 +1,13 @@
+## Getting started
+
+After cloning the repo:
+
+```bash
+uv sync
+source .venv/bin/activate
+make dev
+```
+
 ## Linting & formatting
 
 This project uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting.
