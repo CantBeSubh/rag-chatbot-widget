@@ -1,0 +1,24 @@
+info:
+  name: RAG Chat Stream
+  type: http
+  seq: 3
+
+http:
+  method: post
+  url: http://localhost:8000/chat/stream
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "question": "Where is Subhranshu studying right now?"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: false
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
