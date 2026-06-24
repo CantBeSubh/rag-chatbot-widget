@@ -1,7 +1,10 @@
-.PHONY: dev lint format format-check fix
+.PHONY: dev test lint format format-check fix
 
 dev:
 	uv run fastapi dev
+
+test:
+	uv run pytest -v
 
 lint:
 	uv run ruff check .

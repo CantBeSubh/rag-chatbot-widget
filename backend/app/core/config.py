@@ -10,6 +10,7 @@ class Settings(BaseSettings):
 
     ZILLIZ_URI: str = ""
     ZILLIZ_TOKEN: str = ""
+    DEFAULT_COLLECTION_NAME: str = "tenant_default"
 
     REDIS_URL: str = "redis://localhost:6379"
 
