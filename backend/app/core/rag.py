@@ -1,4 +1,6 @@
+import json
 import time
+from collections.abc import AsyncIterator
 
 from langchain_ollama import OllamaLLM
 
@@ -30,6 +32,19 @@ def build_context(retrieved_chunks: list[dict]) -> str:
     return "\n\n---\n\n".join(parts)
 
 
+def build_sources(retrieved: list[dict]) -> list[dict]:
+    """Format retrieved chunks into the source-citation list returned to clients."""
+    return [
+        {
+            "source_id": r["entity"].get("source_id"),
+            "filename": r["entity"].get("filename"),
+            "chunk_index": r["entity"].get("chunk_index"),
+            "score": round(r["distance"], 3),
+        }
+        for r in retrieved
+    ]
+
+
 def answer(question: str, collection_name: str, top_k: int = 5) -> dict:
     start = time.time()
 
@@ -41,20 +56,45 @@ def answer(question: str, collection_name: str, top_k: int = 5) -> dict:
     )
     response = llm.invoke(prompt)
 
-    sources = [
-        {
-            "source_id": r["entity"].get("source_id"),
-            "filename": r["entity"].get("filename"),
-            "chunk_index": r["entity"].get("chunk_index"),
-            "score": round(r["distance"], 3),
-        }
-        for r in retrieved
-    ]
-
     latency_ms = int((time.time() - start) * 1000)
 
     return {
         "answer": response,
-        "sources": sources,
+        "sources": build_sources(retrieved),
         "latency_ms": latency_ms,
+    }
+
+
+async def answer_stream(
+    question: str, collection_name: str, top_k: int = 5
+) -> AsyncIterator[dict]:
+    """Yield SSE events for the answer: one per token, then a final "done" event.
+
+    Retrieval runs up front, before any tokens are streamed. Uses `astream`
+    (not `stream`) so generation doesn't block the event loop.
+    """
+    start = time.time()
+
+    query_vector = embed([question])[0]
+    retrieved = vector_search(collection_name, query_vector, top_k=top_k)
+    context = build_context(retrieved)
+    prompt = (
+        SYSTEM_PROMPT.format(context=context) + f"\n\nQuestion: {question}\nAnswer:"
+    )
+
+    full_answer = ""
+    async for chunk in llm.astream(prompt):
+        full_answer += chunk
+        yield {"data": json.dumps({"type": "token", "content": chunk})}
+
+    latency_ms = int((time.time() - start) * 1000)
+    yield {
+        "data": json.dumps(
+            {
+                "type": "done",
+                "answer": full_answer,
+                "sources": build_sources(retrieved),
+                "latency_ms": latency_ms,
+            }
+        )
     }
