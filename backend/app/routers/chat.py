@@ -1,14 +1,14 @@
 import json
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
-from typing import Annotated
 
 from ..core.config import settings
 from ..core.database import supabase
 from ..core.rag import answer, answer_stream
-from ..dependencies import get_current_tenant_id, get_widget_config
+from ..dependencies import get_widget_config
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
