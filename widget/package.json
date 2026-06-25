@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun build src/widget.ts --outfile=dist/widget.js --minify --target=browser",
-    "dev": "bun build src/widget.ts --outfile=dist/widget.js --watch --target=browser",
+    "build": "PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000} bun build src/widget.ts --outfile=dist/widget.js --minify --target=browser --env 'PUBLIC_*'",
+    "dev": "PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000} bun build src/widget.ts --outfile=dist/widget.js --watch --target=browser --env 'PUBLIC_*'",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "lint": "eslint src",
