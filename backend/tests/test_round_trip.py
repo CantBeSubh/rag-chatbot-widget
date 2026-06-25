@@ -45,3 +45,25 @@ def test_search_for_vector_database_returns_zilliz_sentence_as_top_hit(
         results[0]["entity"]["text"]
         == "Zilliz Cloud is a managed vector database service."
     )
+
+
+def test_search_returns_url_field_for_url_sourced_chunks(collection_name):
+    sentences = ["Source URL field check."]
+    vectors = embed(sentences)
+    metadata = [
+        {
+            "text": sentences[0],
+            "source_id": "test",
+            "url": "https://example.com/page",
+            "page_title": "Example Page",
+            "chunk_index": 0,
+        }
+    ]
+
+    create_collection_if_not_exists(collection_name)
+    upsert(collection_name, vectors, metadata)
+
+    query_vector = embed(["Source URL field check."])[0]
+    results = vector_search(collection_name, query_vector, top_k=1)
+
+    assert results[0]["entity"]["url"] == "https://example.com/page"
