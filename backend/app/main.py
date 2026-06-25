@@ -13,13 +13,12 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Wildcard is intentional: this widget is embedded via <script> tag on
-# arbitrary third-party client websites, so any origin must be allowed.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
 
 app.include_router(ingest.router)
