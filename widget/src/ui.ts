@@ -49,7 +49,7 @@ export function buildWidget(): WidgetElements {
 
   bubble.addEventListener('click', () => {
     panel.classList.toggle('open')
-    bubble.innerHTML = panel.classList.contains('open') ? '✕' : '💬'
+    bubble.innerHTML = panel.classList.contains('open') ? 'x' : '💬'
   })
 
   return { shadow, panel }
@@ -59,12 +59,12 @@ export function buildPanel(panel: HTMLElement, shadow: ShadowRoot): void {
   panel.innerHTML = `
     <div id="header">
       <span id="bot-name">Assistant</span>
-      <button id="close-btn" aria-label="Close">✕</button>
+      <button id="close-btn" aria-label="Close">X</button>
     </div>
     <div id="messages"></div>
     <div id="input-row">
       <input id="question-input" type="text" placeholder="Ask me anything..." />
-      <button id="send-btn">➤</button>
+      <button id="send-btn">Send</button>
     </div>
   `
 
