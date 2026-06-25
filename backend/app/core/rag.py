@@ -2,12 +2,35 @@ import json
 import time
 from collections.abc import AsyncIterator
 
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langchain_ollama import OllamaLLM
 
+from .config import settings
 from .embedder import embed
 from .vector_store import vector_search
 
-llm = OllamaLLM(model="llama3.1:8b", temperature=0.1)
+if settings.ENVIRONMENT == "development":
+    llm = OllamaLLM(
+        model=settings.LANGCHAIN_OLLAMA_MODEL,
+        temperature=0.1,
+        base_url=settings.LANGCHAIN_OLLAMA_BASE_URL,
+    )
+else:
+    llm = ChatHuggingFace(
+        llm=HuggingFaceEndpoint(
+            repo_id=settings.LANGCHAIN_HUGGINGFACE_MODEL,
+            task="text-generation",
+            provider="auto",
+            huggingfacehub_api_token=settings.HF_TOKEN,
+        )
+    )
+
+
+def _text(chunk) -> str:
+    """Normalize LLM output across providers: OllamaLLM yields plain strings,
+    ChatHuggingFace yields message objects with a `.content` attribute."""
+    return chunk.content if hasattr(chunk, "content") else chunk
+
 
 SYSTEM_PROMPT = """
 You are a helpful assistant. Answer the user's question using ONLY the context \n
@@ -54,7 +77,7 @@ def answer(question: str, collection_name: str, top_k: int = 5) -> dict:
     prompt = (
         SYSTEM_PROMPT.format(context=context) + f"\n\nQuestion: {question}\nAnswer:"
     )
-    response = llm.invoke(prompt)
+    response = _text(llm.invoke(prompt))
 
     latency_ms = int((time.time() - start) * 1000)
 
@@ -84,8 +107,9 @@ async def answer_stream(
 
     full_answer = ""
     async for chunk in llm.astream(prompt):
-        full_answer += chunk
-        yield {"data": json.dumps({"type": "token", "content": chunk})}
+        token = _text(chunk)
+        full_answer += token
+        yield {"data": json.dumps({"type": "token", "content": token})}
 
     latency_ms = int((time.time() - start) * 1000)
     yield {
