@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
 from .core.database import supabase
 from .core.logging import setup_logging
-from .routers import chat, ingest
+from .routers import chat, ingest, sources
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ app.add_middleware(
 
 app.include_router(ingest.router)
 app.include_router(chat.router)
+app.include_router(sources.router)
 
 
 @app.on_event("startup")
