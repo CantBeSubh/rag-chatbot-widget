@@ -9,11 +9,13 @@ http:
   headers:
     - name: Content-Type
       value: application/json
+    - name: Origin
+      value: http://localhost:3000
   body:
     type: json
     data: |-
       {
-        "question": "What is the capital of France?"
+        "question": "Where is Subhranshu studying right now?"
       }
   auth: inherit
 
