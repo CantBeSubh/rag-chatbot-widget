@@ -68,6 +68,13 @@ export function buildPanel(panel: HTMLElement, shadow: ShadowRoot): void {
     </div>
   `
 
+  const closeBtn = panel.querySelector('#close-btn') as HTMLButtonElement
+  const bubble = shadow.querySelector('#bubble') as HTMLButtonElement
+  closeBtn.addEventListener('click', () => {
+    panel.classList.remove('open')
+    bubble.innerHTML = '💬'
+  })
+
   const style = shadow.querySelector('style') as HTMLStyleElement
   style.textContent += `
     #header {
