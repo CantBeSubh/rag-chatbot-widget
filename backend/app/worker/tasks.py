@@ -11,7 +11,7 @@ from .celery_app import celery_app
 
 
 @celery_app.task(bind=True)
-def add(self, x: int, y: int) -> int:
+def add(self, x: int, y: int) -> int:  # noqa: ARG001
     time.sleep(2)
     return x + y
 
