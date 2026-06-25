@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import settings
 from .core.database import supabase
@@ -11,6 +12,15 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
+# Wildcard is intentional: this widget is embedded via <script> tag on
+# arbitrary third-party client websites, so any origin must be allowed.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(ingest.router)
 app.include_router(chat.router)
