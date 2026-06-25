@@ -14,6 +14,7 @@ if settings.ENVIRONMENT == "development":
         model=settings.LANGCHAIN_OLLAMA_MODEL,
         temperature=0.1,
         base_url=settings.LANGCHAIN_OLLAMA_BASE_URL,
+        num_ctx=8192,
     )
 else:
     llm = ChatHuggingFace(
@@ -22,6 +23,7 @@ else:
             task="text-generation",
             provider="auto",
             huggingfacehub_api_token=settings.HF_TOKEN,
+            max_new_tokens=1024,
         )
     )
 
@@ -61,7 +63,9 @@ def build_sources(retrieved: list[dict]) -> list[dict]:
         {
             "source_id": r["entity"].get("source_id"),
             "filename": r["entity"].get("filename"),
+            "url": r["entity"].get("url"),
             "chunk_index": r["entity"].get("chunk_index"),
+            "text": r["entity"].get("text"),
             "score": round(r["distance"], 3),
         }
         for r in retrieved

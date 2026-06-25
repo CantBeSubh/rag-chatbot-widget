@@ -20,27 +20,31 @@ def filter_new_chunks(chunks: list[str], tenant_id: str, source_id: str) -> list
     schema = supabase.schema(settings.SUPABASE_SCHEMA)
     hashes = [compute_hash(c) for c in chunks]
 
-    existing = (
-        schema.table("chunk_hashes")
-        .select("hash")
-        .eq("tenant_id", tenant_id)
-        .in_("hash", hashes)
-        .execute()
-    )
-    existing_hashes = {row["hash"] for row in existing.data}
+    # Batch lookups to stay within PostgREST's URL length limit (~8KB).
+    # SHA-256 hashes are 64 chars each; 100 per request is safely under the limit.
+    BATCH = 100
+    existing_hashes: set[str] = set()
+    for i in range(0, len(hashes), BATCH):
+        batch = hashes[i : i + BATCH]
+        result = (
+            schema.table("chunk_hashes")
+            .select("hash")
+            .eq("tenant_id", tenant_id)
+            .in_("hash", batch)
+            .execute()
+        )
+        existing_hashes.update(row["hash"] for row in result.data)
 
-    new_indices = [i for i, h in enumerate(hashes) if h not in existing_hashes]
-
-    # The same hash can appear more than once in one batch (e.g. a repeated
-    # nav/footer chunk across pages) — insert each new hash only once to
-    # avoid violating the (hash, tenant_id) primary key.
+    # Deduplicate within the batch too — same hash appearing on multiple pages
+    # (e.g. nav/footer boilerplate, locale variants) must only be indexed once.
     seen: set[str] = set()
+    new_indices: list[int] = []
     rows = []
-    for i in new_indices:
-        h = hashes[i]
-        if h in seen:
+    for i, h in enumerate(hashes):
+        if h in existing_hashes or h in seen:
             continue
         seen.add(h)
+        new_indices.append(i)
         rows.append({"hash": h, "tenant_id": tenant_id, "source_id": source_id})
 
     if rows:
