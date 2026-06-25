@@ -1,0 +1,33 @@
+info:
+  name: Hugging Face
+  type: http
+  seq: 1
+
+http:
+  method: post
+  url: https://router.huggingface.co/v1/chat/completions
+  headers:
+    - name: Authorization
+      value: Bearer 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
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "messages": [
+          {
+            "role": "user",
+            "content": "What is the capital of France?"
+          }
+        ],
+        "model": "zai-org/GLM-5.2:together",
+        "stream": true
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: false
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -14,6 +14,12 @@ class Settings(BaseSettings):
 
     REDIS_URL: str = "redis://localhost:6379"
 
+    LANGCHAIN_OLLAMA_BASE_URL: str = "http://localhost:11434"
+    LANGCHAIN_OLLAMA_MODEL: str = "llama3.1:8b"
+
+    HF_TOKEN: str = ""
+    LANGCHAIN_HUGGINGFACE_MODEL: str = "zai-org/GLM-5.2"
+
     SECRET_KEY: str = ""
     ENVIRONMENT: str = "development"
 
