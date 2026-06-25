@@ -7,6 +7,7 @@
     "build": "bun build src/widget.ts --outfile=dist/widget.js --minify --target=browser",
     "dev": "bun build src/widget.ts --outfile=dist/widget.js --watch --target=browser",
     "typecheck": "tsc --noEmit",
+    "test": "bun test",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "format": "prettier --write src",
@@ -14,6 +15,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/bun": "^1.3.14",
     "eslint": "^10.5.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.4",
