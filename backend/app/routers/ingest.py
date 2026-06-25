@@ -10,8 +10,15 @@ from ..core.embedder import embed
 from ..core.extractors import extract_text
 from ..core.vector_store import create_collection_if_not_exists, upsert
 from ..dependencies import get_current_tenant_id
+from pydantic import BaseModel
+from ..worker.tasks import ingest_url_task
 
 router = APIRouter(prefix="/ingest", tags=["ingestion"])
+
+
+class IngestURLRequest(BaseModel):
+    url: str
+    max_pages: int = 50
 
 
 @router.post("/file")
@@ -75,3 +82,38 @@ async def ingest_file(
             "id", source_id
         ).execute()
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.post("/url")
+async def ingest_url(
+    request: IngestURLRequest,
+    tenant_id: str = Depends(get_current_tenant_id),
+):
+    schema = supabase.schema(settings.SUPABASE_SCHEMA)
+
+    source = (
+        schema.table("sources")
+        .insert(
+            {
+                "tenant_id": tenant_id,
+                "type": "url",
+                "url": request.url,
+                "status": "queued",
+            }
+        )
+        .execute()
+    )
+    source_id = source.data[0]["id"]
+
+    ingest_url_task.delay(
+        source_id=source_id,
+        tenant_id=tenant_id,
+        url=request.url,
+        max_pages=request.max_pages,
+    )
+
+    return {
+        "source_id": source_id,
+        "status": "queued",
+        "message": f"Crawl queued. Poll GET /sources/{source_id} for status.",
+    }
