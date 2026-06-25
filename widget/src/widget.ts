@@ -1,5 +1,6 @@
 import { getApiKey } from './auth'
-import { buildWidget } from './ui'
+import { buildWidget, buildPanel } from './ui'
+import { wireInput } from './chat'
 
 declare global {
   interface Window {
@@ -14,6 +15,8 @@ declare global {
 function init(): void {
   const apiKey = getApiKey()
   const { shadow, panel } = buildWidget()
+  buildPanel(panel, shadow)
+  wireInput(shadow, apiKey)
   window.__ragWidget = { apiKey, shadow, panel }
 }
 
