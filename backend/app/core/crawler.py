@@ -1,14 +1,22 @@
 import asyncio
 import logging
+import re
 from urllib.parse import urljoin, urlparse
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
-from crawl4ai.content_filter_strategy import PruningContentFilter
 from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 
 logger = logging.getLogger(__name__)
 
 MAX_PAGES = 50  # Hard cap — protects against enormous sites
+
+_LOCALE_RE = re.compile(r"^/([a-z]{2}(?:-[a-zA-Z]{2,4})?)(/|$)")
+
+
+def _locale_prefix(path: str) -> str | None:
+    """Return the locale segment of a path (e.g. 'de', 'zh-tw'), or None."""
+    m = _LOCALE_RE.match(path)
+    return m.group(1) if m else None
 
 
 async def crawl_site(start_url: str, max_pages: int = MAX_PAGES) -> list[dict]:
@@ -17,16 +25,12 @@ async def crawl_site(start_url: str, max_pages: int = MAX_PAGES) -> list[dict]:
     Returns a list of dicts: [{url, title, text}, ...]
     """
     base_domain = urlparse(start_url).netloc
+    start_locale = _locale_prefix(urlparse(start_url).path)
     visited: set[str] = set()
     to_visit = [start_url]
     results = []
 
-    content_filter = PruningContentFilter(
-        threshold=0.48,
-        threshold_type="fixed",
-        min_word_threshold=50,
-    )
-    md_generator = DefaultMarkdownGenerator(content_filter=content_filter)
+    md_generator = DefaultMarkdownGenerator()
 
     browser_config = BrowserConfig(headless=True, verbose=False)
     run_config = CrawlerRunConfig(
@@ -38,6 +42,7 @@ async def crawl_site(start_url: str, max_pages: int = MAX_PAGES) -> list[dict]:
         # but succeeds in ~2s with domcontentloaded.
         wait_until="domcontentloaded",
         page_timeout=30000,
+        excluded_tags=["nav", "header", "footer", "aside", "script", "style"],
     )
 
     async with AsyncWebCrawler(config=browser_config) as crawler:
@@ -52,7 +57,7 @@ async def crawl_site(start_url: str, max_pages: int = MAX_PAGES) -> list[dict]:
                 if not result.success:
                     continue
 
-                text = result.markdown.fit_markdown if result.markdown else ""
+                text = result.markdown.raw_markdown if result.markdown else ""
                 if not text or len(text.strip()) < 100:
                     continue
 
@@ -75,6 +80,7 @@ async def crawl_site(start_url: str, max_pages: int = MAX_PAGES) -> list[dict]:
                         and "#" not in full_url
                         and full_url not in visited
                         and full_url not in to_visit
+                        and _locale_prefix(parsed_link.path) == start_locale
                     ):
                         to_visit.append(full_url)
 
