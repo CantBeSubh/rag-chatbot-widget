@@ -44,6 +44,8 @@ def filter_new_chunks(chunks: list[str], tenant_id: str, source_id: str) -> list
         rows.append({"hash": h, "tenant_id": tenant_id, "source_id": source_id})
 
     if rows:
-        schema.table("chunk_hashes").insert(rows).execute()
+        schema.table("chunk_hashes").upsert(
+            rows, on_conflict="hash,tenant_id", ignore_duplicates=True
+        ).execute()
 
     return new_indices
