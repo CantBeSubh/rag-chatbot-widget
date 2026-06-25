@@ -1,0 +1,20 @@
+info:
+  name: DELTEE source id
+  type: http
+  seq: 2
+
+http:
+  method: delete
+  url: http://localhost:8000/sources/{{source_id}}
+  auth: inherit
+
+runtime:
+  variables:
+    - name: source_id
+      value: 6bac272c-a4e3-421f-9774-05f2b6920973
+
+settings:
+  encodeUrl: false
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
