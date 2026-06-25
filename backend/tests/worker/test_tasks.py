@@ -1,4 +1,3 @@
-from app.core.config import settings
 from app.worker.celery_app import celery_app
 from app.worker.tasks import add
 

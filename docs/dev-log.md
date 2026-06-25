@@ -388,3 +388,71 @@ configured at all, so this path was never exercised locally before deploying.
   (both eager and non-eager tests) all passing against the new setup.
 - CAN-51 fix implemented; not yet marked Done in Linear pending user
   confirmation against the actual Railway-deployed worker.
+
+## 2026-06-25 — CAN-37: M2-D2: crawl4ai integration — async web crawler
+
+### Context
+
+CAN-37 (M2-D2, parent CAN-23) asks for `crawl_site`/`crawl_site_sync` in
+`app/core/crawler.py`: BFS-crawl same-domain pages from a starting URL via
+crawl4ai's headless browser, returning `{url, title, text}` dicts ready for
+chunking. Scope deliberately excludes the Celery task (CAN-38), the
+`/ingest/url` endpoint (CAN-39), and a broader real-site testing pass
+(CAN-40) — all separate backlog tickets. Design brainstormed and written to
+`docs/superpowers/specs/2026-06-25-crawl4ai-crawler-design.md` before
+implementation.
+
+### Observations
+
+- **Ticket's sample code reads a nonexistent attribute**: `result.markdown_v2
+  .fit_markdown` — `markdown_v2` doesn't exist in the current crawl4ai API.
+  Confirmed via crawl4ai's docs that `result.markdown` is itself a
+  `MarkdownGenerationResult` with `.raw_markdown`/`.fit_markdown`; fixed to
+  `result.markdown.fit_markdown if result.markdown else ""`. Same class of
+  issue as CAN-28's wrong embedding dimension and CAN-29's wrong import
+  style — ticket sample code in this project has consistently needed
+  verification against the real library, not trusted as-is.
+- **`wait_until="networkidle"` (also from the ticket) doesn't work at all
+  against the ticket's own canonical test site**, `fastapi.tiangolo.com`.
+  First test run failed: `crawl_site_sync(..., max_pages=5)` returned `[]`
+  after a 30s `Page.goto` timeout. The log showed `[ANTIBOT]`/`Proxy direct
+  failed`, which looked like bot-blocking but turned out to be a red
+  herring — read the installed crawl4ai source
+  (`async_webcrawler.py:399-544`) and confirmed `ANTIBOT` is just crawl4ai's
+  generic tag for *any* exception during a fetch attempt, logged then
+  re-raised since no proxy list/retries were configured. The actual
+  exception underneath was the Playwright navigation timeout.
+  Verified directly with a throwaway script: `wait_until="networkidle"`
+  against `fastapi.tiangolo.com` **still times out completely at 60s**
+  (not just slow at 30s) — the page has continuous background network
+  activity that never quiets down, so `networkidle` can never fire,
+  matching Playwright's own documented warning about that wait condition.
+  `wait_until="domcontentloaded"` succeeded in ~2s with 170KB of real HTML.
+  Fixed by switching `crawl_site`'s `CrawlerRunConfig` to
+  `wait_until="domcontentloaded"`.
+- **Two tests initially passed vacuously**: `test_crawl_site_stays_on_same_
+  domain` and `test_crawl_site_respects_max_pages` looped/compared over
+  `pages` without asserting it was non-empty, so they'd have passed even
+  with the `networkidle` bug returning `[]` every time (a `for` loop over
+  `[]` and `0 <= 2` are both trivially true). Caught only because a third,
+  stricter test (`returns_pages_with_text`, asserting `len(pages) == 5`)
+  happened to fail first. Added `assert len(pages) > 0` (and folded into
+  `assert 0 < len(pages) <= 2` for the max-pages test) so both tests
+  actually validate the crawler did something.
+- **Real install command is `crawl4ai-setup`** (runs Playwright's Chromium
+  install internally), not directly `playwright install chromium` as the
+  ticket's step 1 implies — confirmed via crawl4ai's docs; the latter is
+  only a documented fallback if `crawl4ai-setup` fails.
+
+### State at end of session
+
+- `app/core/crawler.py`: `crawl_site` (async, sequential BFS, same-domain via
+  explicit `urlparse` netloc check), `crawl_site_sync` (`asyncio.run` wrapper
+  for the future Celery task in CAN-38). `MAX_PAGES = 50` module constant.
+- `pyproject.toml`/`uv.lock`: `crawl4ai>=0.9.0` added.
+- `tests/core/test_crawler.py` (4 tests, all passing against the live
+  `fastapi.tiangolo.com` site, ~26s total): returns 5 non-empty pages,
+  stays on the same domain, respects `max_pages`, unreachable URL returns
+  `[]` without raising.
+- Design spec: `docs/superpowers/specs/2026-06-25-crawl4ai-crawler-design.md`.
+- Not yet run: `ruff check`/`ruff format --check` on the new crawler code.
