@@ -36,3 +36,12 @@ def vector_search(
         output_fields=["text", "source_id", "filename", "url", "chunk_index"],
     )
     return results[0]
+
+
+def delete_by_source(collection_name: str, source_id: str) -> None:
+    if not client.has_collection(collection_name):
+        return
+    client.delete(
+        collection_name=collection_name,
+        filter=f'source_id == "{source_id}"',
+    )
