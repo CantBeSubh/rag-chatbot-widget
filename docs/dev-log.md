@@ -333,3 +333,58 @@ implementation.
 - `pyproject.toml`/`uv.lock`: `celery[redis]>=5.6.3` added.
 - Design spec: `docs/superpowers/specs/2026-06-25-celery-redis-worker-design.md`.
 - `ruff check`/`format --check` clean on the new worker code.
+
+## 2026-06-25 — CAN-51: Redis auth support (local admin/admin, Railway native)
+
+### Context
+
+Production Redis is hosted on Railway and requires auth (`REDISUSER=default` +
+a generated password, embedded directly in Railway's `REDIS_URL`). Running
+the ad-hoc connectivity check (`redis.Redis.from_url(settings.REDIS_URL).ping()`)
+against that setup raised `redis.exceptions.AuthenticationError`, tracked as
+CAN-51 (sub-issue of CAN-36). Local Redis (`compose.yaml`) had no auth
+configured at all, so this path was never exercised locally before deploying.
+
+### Observations
+
+- **No app code changes needed for auth itself** — both Celery and `redis-py`
+  parse `user:pass@host:port` straight out of the connection URL natively.
+  The actual gap was that local Redis didn't require auth, so a misconfigured
+  or hardcoded bare URL would only surface as an error against Railway,
+  not locally.
+- **Local Redis now requires auth via ACL**, not just `requirepass`: plain
+  `requirepass` only sets a password for the implicit `default` user and
+  ignores any username supplied in the URL (`AUTH admin admin` would fail
+  with `WRONGPASS` — there's no ACL user named `admin`). Added an explicit
+  `--user admin on >admin ~* &* +@all` ACL rule alongside `--requirepass
+  admin` in `compose.yaml`'s `redis` service so `redis://admin:admin@...`
+  actually works, not just `redis://default:admin@...`. Passed as a YAML
+  list (exec form) so Docker execs the args directly — no shell to mangle
+  the `>`/`~`/`&`/`*` characters.
+  Verified directly: anonymous `PING` → `NOAUTH`; both
+  `redis://admin:admin@...` and `redis://default:admin@...` → `PONG`.
+- **`redis-commander` needed the password too** — its `REDIS_HOSTS` format is
+  `label:host:port:dbIndex:password`; without the trailing `:admin` it would
+  fail to connect to the now-authenticated Redis. Confirmed via its logs
+  after the change (`Redis Connection redis:6379 using Redis DB #0`, no
+  auth errors).
+- **Default `REDIS_URL` updated to embed creds** in three places that all
+  needed to move together: `app/core/config.py`'s fallback default,
+  `.env.example`, and the actual local `.env` (gitignored, not committed) —
+  all now `redis://admin:admin@localhost:6379`. Production is unaffected:
+  Railway's own `REDIS_URL` env var (with its real generated password)
+  overrides this default at deploy time, same mechanism already used for
+  `SUPABASE_URL`/`SUPABASE_KEY`.
+
+### State at end of session
+
+- `compose.yaml`: `redis` now enforces auth (`admin`/`admin` via ACL, plus
+  `default`/`admin`); `redis-commander` passes the password through.
+- `app/core/config.py`, `.env.example`, `.env`: `REDIS_URL` default updated
+  to `redis://admin:admin@localhost:6379`.
+- Verified end-to-end: `docker compose up -d redis redis-commander`, manual
+  `redis-cli` AUTH checks, a local `make worker`-equivalent Celery worker
+  connecting over the authenticated URL, and `uv run pytest tests/worker/`
+  (both eager and non-eager tests) all passing against the new setup.
+- CAN-51 fix implemented; not yet marked Done in Linear pending user
+  confirmation against the actual Railway-deployed worker.

@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     ZILLIZ_TOKEN: str = ""
     DEFAULT_COLLECTION_NAME: str = "tenant_default"
 
-    REDIS_URL: str = "redis://localhost:6379"
+    REDIS_URL: str = "redis://admin:admin@localhost:6379"
 
     LANGCHAIN_OLLAMA_BASE_URL: str = "http://localhost:11434"
     LANGCHAIN_OLLAMA_MODEL: str = "llama3.1:8b"
