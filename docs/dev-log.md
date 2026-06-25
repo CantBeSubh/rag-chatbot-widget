@@ -456,3 +456,110 @@ implementation.
   `[]` without raising.
 - Design spec: `docs/superpowers/specs/2026-06-25-crawl4ai-crawler-design.md`.
 - Not yet run: `ruff check`/`ruff format --check` on the new crawler code.
+
+## 2026-06-25 — CAN-38: M2-D3: Celery crawl ingestion task (crawl → chunk → dedup → embed → upsert)
+
+### Context
+
+CAN-38 (M2-D3, parent CAN-23) is the orchestrator that wires together every
+component built across CAN-28/29/36/37: a Celery task that crawls a URL,
+chunks every page, deduplicates chunks against prior crawls, embeds, upserts
+to Zilliz, and keeps the Supabase `sources` row's status in sync throughout.
+Deliberately excludes the `/ingest/url` API endpoint and status-polling
+endpoints (CAN-39) — this ticket only builds the task itself, dispatched
+directly via `.delay()` in tests, matching the ticket's own manual
+verification approach. Plan written to
+`docs/superpowers/plans/2026-06-25-celery-crawl-ingestion-task.md` and
+executed via subagent-driven development (fresh implementer + reviewer
+subagent per task) before any implementation.
+
+### Observations
+
+- **Ticket's dedup sample code had a real metadata-misattribution bug.**
+  The ticket's sample `filter_new_chunks` returned the *kept chunk values*,
+  then the caller re-found each one's metadata via
+  `chunk_metadata[all_chunks.index(c)]`. `list.index()` returns the first
+  matching index by value — if the same chunk text repeats across pages
+  (very plausible for a docs site's nav/footer block, which every page
+  shares), every repeated occurrence would silently get attributed to the
+  *first* page's metadata. Redesigned `filter_new_chunks` to return
+  **indices** into the input list instead of values, so the caller
+  (`ingest_url_task`) filters both `all_chunks` and `chunk_metadata` by the
+  same index list — no value re-matching anywhere. Same general class of
+  issue as CAN-28/29/37's sample-code bugs: ticket code in this project has
+  consistently needed independent verification, not trust.
+- **Task review caught a second, subtler bug the plan itself didn't
+  anticipate**: a TOCTOU race in `filter_new_chunks` — it selected existing
+  hashes, then plain-`insert`ed new ones, with no transaction or conflict
+  guard between the two. Two concurrent calls for the same tenant (e.g.
+  overlapping crawls) could both see a hash as new and the second `insert`
+  would raise an uncaught primary-key violation on `(hash, tenant_id)`.
+  Fixed by switching to `.upsert(rows, on_conflict="hash,tenant_id",
+  ignore_duplicates=True)`, verified against the installed `postgrest`
+  client's actual `upsert()` signature rather than assumed.
+- **`vector_search` couldn't surface `url` even though `rag.py` already
+  expected it to.** `app/core/rag.py`'s `build_context` already had
+  `chunk["entity"].get("url", "unknown")` as a fallback for chunks without a
+  `filename` — written in anticipation of URL-sourced content — but
+  `vector_search`'s `output_fields` list never requested `"url"` from
+  Zilliz, so that fallback could never fire. One-line fix:
+  `output_fields=["text", "source_id", "filename", "url", "chunk_index"]`.
+- **Schema-scoped Supabase calls, again.** The ticket's sample code calls
+  `supabase.table("sources")...` directly, same gap as every prior ticket's
+  sample code in this repo — every Supabase call in `dedup.py` and
+  `tasks.py` goes through `supabase.schema(settings.SUPABASE_SCHEMA)`
+  instead, matching `ingest.py`/`dependencies.py`/`chat.py` convention.
+- **Deliberate scope decision: retry-exhaustion path is not unit-tested.**
+  The Celery task's `try/except Exception` + `autoretry_for=(Exception,)` +
+  `self.request.retries >= self.max_retries` pattern (verified correct by
+  tracing Celery's actual retry semantics attempt-by-attempt: the check is
+  `True` on exactly the final attempt, not off-by-one) is real and in
+  production code, but deterministically exercising the exhausted-retries
+  branch in a test would require either mocking a collaborator (against
+  this project's no-mocking convention) or tolerating real sleep-based
+  backoff (60s/120s/240s per `retry_backoff=True`). Only the "crawler
+  returned no pages" failure branch — deterministic, fast, no retry
+  involved — got an automated test. The retry-exhaustion path is exercised
+  by the ticket's own manual end-to-end verification step instead.
+- **Per-page `chunk_index` is relative to the page**, not a running counter
+  across the whole crawl (`for page in pages: for i, chunk in
+  enumerate(chunk_text(page["text"]))`) — matches the existing convention
+  from file ingestion, where `chunk_index` is relative to the one file.
+
+### State at end of session
+
+- `app/core/dedup.py`: `compute_hash(text) -> str`,
+  `filter_new_chunks(chunks, tenant_id, source_id) -> list[int]` (returns
+  indices of chunks not yet recorded for the tenant; records new hashes via
+  upsert-with-ignore-duplicates to survive concurrent calls).
+- `app/core/vector_store.py`: `vector_search`'s `output_fields` now includes
+  `"url"`.
+- `app/worker/tasks.py`: `ingest_url_task(self, source_id, tenant_id, url,
+  max_pages=50)` — bound Celery task, `max_retries=3`,
+  `default_retry_delay=60`, `autoretry_for=(Exception,)`,
+  `retry_backoff=True`. Drives `sources.status` through
+  `crawling`/`processing`/`done`/`error`. Existing trivial `add` task (from
+  CAN-36) left untouched.
+- New `chunk_hashes` table in Supabase's `testing` schema (`hash TEXT,
+  tenant_id UUID, source_id UUID`, `PRIMARY KEY (hash, tenant_id)`) — created
+  manually via the SQL editor, since the Supabase MCP integration still has
+  no access to this project; verified reachable via a throwaway
+  insert/select round trip before any test code ran, same pattern as
+  CAN-29's schema-permission verification.
+- Tests (all passing against live Supabase `testing` schema + live Zilliz +
+  live crawl4ai against `https://fastapi.tiangolo.com`, no mocking):
+  `tests/core/test_dedup.py` (6), `tests/test_round_trip.py` (+1, now 2
+  total), `tests/worker/test_tasks.py` (+3 `ingest_url_task` tests, now 5
+  total with the existing `add` tests).
+- `ruff check`/`ruff format --check` clean on all changed files.
+- Commits: `5696f9f` (dedup helper), `51275bb` (dedup race fix),
+  `dce87e3` (vector_search url field), `a1475d3` (ingest_url_task).
+- Each task went through one implementer subagent + one task-reviewer
+  subagent; only Task 1 needed a fix round (the TOCTOU race above) — Tasks
+  2 and 3 reviewed clean on the first pass.
+- Outstanding: the ticket's own manual end-to-end verification (dispatch
+  `ingest_url_task` via a Python shell against a running `docker compose
+  up`/worker, confirm `sources` status progression, ask a question via
+  `/chat` to confirm grounded answers cite crawled content) is unrun —
+  needs a live worker process, left for the user to run directly rather
+  than a subagent.

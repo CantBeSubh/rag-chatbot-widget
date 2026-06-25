@@ -33,6 +33,6 @@ def vector_search(
         collection_name=collection_name,
         data=[query_vector],
         limit=top_k,
-        output_fields=["text", "source_id", "filename", "chunk_index"],
+        output_fields=["text", "source_id", "filename", "url", "chunk_index"],
     )
     return results[0]

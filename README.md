@@ -3,6 +3,8 @@
 ## Structure
 
 - `backend/` — FastAPI backend, managed with [uv](https://docs.astral.sh/uv/). See `backend/README.md` for backend-specific docs (linting, formatting, Makefile shortcuts).
+  - `backend/app/worker/` — Celery worker (`celery_app.py`, `tasks.py`) for async jobs, backed by Redis. Built/run via `backend/worker.dockerfile`.
+- `widget/` — embeddable chat widget (TypeScript, managed with [bun](https://bun.sh/)). See `widget/README.md` for widget-specific docs.
 
 ## Setup
 
