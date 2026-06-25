@@ -563,3 +563,132 @@ subagent per task) before any implementation.
   `/chat` to confirm grounded answers cite crawled content) is unrun —
   needs a live worker process, left for the user to run directly rather
   than a subagent.
+
+## 2026-06-26 — CAN-40: M2-D5: Crawl pipeline testing — real sites + edge cases
+
+### Context
+
+CAN-40 is the quality gate before M3: run all 8 manual tests from the ticket
+against live infrastructure, fix every failure found, and confirm the pipeline
+is solid. No new features — all bugs surfaced during test runs. Test commands
+documented in `docs/can-40-crawl-pipeline-tests.md`. All 8 tests passed by end
+of session.
+
+### Bugs found and fixed
+
+**1. SIGSEGV crash in Celery worker (Playwright/Chromium + fork)**
+
+Celery's default prefork pool forks to spawn workers. Playwright/Chromium is a
+native multi-threaded process that doesn't survive `fork()` — the forked child
+has corrupted internal state and crashes with signal 11 (SIGSEGV). Manifested
+as `WorkerLostError('Worker exited prematurely: signal 11 (SIGSEGV) Job: 0.')`
+in the Celery main process logs.
+
+Fix: switch to `--pool=solo`, which runs tasks in the same process without
+forking. Set as the default in both `Makefile`'s `worker` target and
+`celery_app.conf.update(worker_pool="solo")` so it applies regardless of how
+the worker is started.
+
+**2. Duplicate vectors from SIGSEGV retries**
+
+With `max_retries=3`, a crashing task runs up to 4 times total (1 initial + 3
+retries). Each SIGSEGV crashed inside `crawl_site_sync` — before
+`filter_new_chunks` had a chance to write to `chunk_hashes`. So every attempt
+that made it past the crawl step inserted the same vectors into Zilliz with no
+dedup protection. The same chunk appeared 4× in search results with identical
+scores. Fixed indirectly by the solo pool fix above (no more crashes → no more
+retries). Existing duplicates cleaned up by deleting and re-crawling the source.
+
+**3. Within-batch dedup not applied to vector inserts**
+
+`filter_new_chunks` built `new_indices` as all indices where the hash wasn't in
+the DB — including duplicates within the same batch. The `seen` set that
+prevented duplicate primary-key violations in the `chunk_hashes` upsert was
+applied *after* `new_indices` was already computed, so it only gated the DB
+write, not the vector insert. Consequence: the crawler's locale variants
+(`/de/`, `/es/`, `/fr/`) all had the same boilerplate content at chunk_index 1
+— the hash was recorded once in `chunk_hashes` but all locale copies were
+embedded and inserted into Zilliz.
+
+Fix: merged the two loops into one pass so the same `seen` set gates both
+`new_indices` (vector insert) and `rows` (DB insert) simultaneously.
+
+**4. PostgREST URL length limit hit for large crawls**
+
+Switching from `fit_markdown` to `raw_markdown` (see below) gives ~25KB of
+content per page. After chunking, a single crawl can produce hundreds of chunks.
+`filter_new_chunks` sent all their SHA-256 hashes in a single `.in_()`
+query — the hash values end up in the URL query string (~64 chars × N hashes),
+which exceeded PostgREST's URL limit and returned `400 JSON could not be
+generated`. Fix: batch hash lookups at 100 per request (100 × 64 chars = 6.4KB,
+safely under the limit).
+
+**5. LLM answer truncated mid-sentence**
+
+`llama3.1:8b` in Ollama defaults to `num_ctx=2048`. With 5 chunks of text in
+the system prompt, the prompt itself consumed nearly the entire context window,
+leaving almost no tokens for generation. The response came back as
+`"I don't have information about that in my"` — literally the fallback phrase
+cut off after a few tokens. Fix: set `num_ctx=8192` for `OllamaLLM` and
+`max_new_tokens=1024` for `HuggingFaceEndpoint`.
+
+**6. Crawler extracting wrong/empty content**
+
+Three compounding issues prevented the FastAPI homepage intro paragraph
+("FastAPI is a modern, fast web framework...") from ever reaching the index:
+
+- `PruningContentFilter` (threshold=0.48, min_word_threshold=50) was silently
+  discarding short-but-important prose sections. The entire FastAPI homepage
+  intro was classified as low-density content and pruned before chunking.
+  Confirmed by running a test crawl: total extracted text was only 2.7KB for
+  a rich docs homepage.
+- `fit_markdown` applies the content filter as a post-processing step on top
+  of already-converted markdown — hero/intro sections that don't match the
+  filter's density heuristics are gone before we ever see them.
+- Without `excluded_tags`, `raw_markdown` dumps everything including nav links,
+  sponsor banners, and sidebar content into the first 2KB, burying any real
+  content and inflating chunk count with noise.
+
+Fix: drop `PruningContentFilter` entirely, switch to `DefaultMarkdownGenerator`
+with no content filter, use `raw_markdown` instead of `fit_markdown`, and add
+`excluded_tags=["nav", "header", "footer", "aside", "script", "style"]` to
+strip structural chrome at the DOM level before markdown conversion. Confirmed
+the intro paragraph present in extracted text after the fix (25KB total vs
+2.7KB before).
+
+**7. Crawler following locale variant URLs**
+
+`fastapi.tiangolo.com` links to `/de/`, `/es/`, `/fr/`, `/pt/`, `/zh/` etc.
+from its homepage. With `max_pages=10`, locale variants quickly filled the page
+budget with near-duplicate content, leaving no budget for actual English
+documentation pages. The within-batch dedup bug (#3) meant the same boilerplate
+nav/footer text across all locale pages was also being inserted multiple times
+into Zilliz.
+
+Fix: detect the locale prefix of the start URL (`_locale_prefix(path)` extracts
+the ISO 639-1 code if the path starts with `/xx/` or `/xx-YY/`). When following
+links, only enqueue URLs whose locale prefix matches the start URL's prefix. A
+start at `fastapi.tiangolo.com` (no prefix) will never follow `/de/` links; a
+start at `fastapi.tiangolo.com/de/` would only follow other `/de/` links.
+
+**8. Source citations missing `url` and `text` fields**
+
+`build_sources` in `rag.py` returned `source_id`, `filename`, `chunk_index`,
+and `score` — no `url` (so URL-sourced chunks showed `filename: null` with no
+indication of which page they came from) and no `text` (so there was no way to
+inspect what was actually retrieved without querying Zilliz separately). Both
+fields are already stored in Zilliz per chunk; added them to the response.
+
+### State at end of session
+
+- All 8 CAN-40 tests pass against live infrastructure.
+- `app/worker/celery_app.py` + `Makefile`: `worker_pool="solo"` — no more
+  Playwright/fork SIGSEGV.
+- `app/core/crawler.py`: `DefaultMarkdownGenerator` (no content filter),
+  `raw_markdown`, `excluded_tags`, locale prefix filtering.
+- `app/core/dedup.py`: single-pass dedup (gates both vector index and DB
+  insert); batched `.in_()` lookups at 100 hashes per request.
+- `app/core/rag.py`: `num_ctx=8192` (Ollama), `max_new_tokens=1024` (HF);
+  `url` and `text` fields in source citations.
+- Commits: `f06e0c3` (solo pool), `f68c58c` (crawler), `51decb2` (dedup),
+  `8d95c04` (rag), `c6d6fc8` (test commands doc).

@@ -42,6 +42,11 @@ curl -s -X POST $BASE/chat \
   -d '{"question": "What is FastAPI?"}' | jq "{answer,sources}"
 ```
 
+curl -s -X POST $BASE/chat \                                                                      -H "Authorization: Bearer $API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Origin: <http://localhost>" \
+  -d '{"question": "What is FastAPI?"}' | jq "{answer,sources}"
+
 **Pass:** `status=done`, `chunk_count > 0`, answer is grounded.
 
 ---
