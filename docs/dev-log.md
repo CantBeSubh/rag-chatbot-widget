@@ -260,3 +260,76 @@ per this repo's standing preference for bun over npm/esbuild for JS tooling.
 - CAN-32 fully done per its six-task implementation plan
   (`docs/superpowers/plans/2026-06-24-widget-scaffold.md`), including the
   pre-commit hook task.
+
+## 2026-06-25 — CAN-36: M2-D1: Celery + Redis async task worker setup
+
+### Context
+
+CAN-36 (M2: URL Crawl Ingestion, parent CAN-23) asks for the Celery + Redis
+background-task infrastructure that later crawl tasks will run on, proven
+here with a dummy `add(x, y)` task. Design brainstormed and written to
+`docs/superpowers/specs/2026-06-25-celery-redis-worker-design.md` before
+implementation.
+
+### Observations
+
+- **Deviated from the ticket's sample code** in the same places earlier
+  tickets have: Poetry → `uv add "celery[redis]"`; a top-level
+  `backend/worker/` package with absolute imports (`from core.config import
+  settings`) → `app/worker/` inside the existing `app` package with relative
+  imports (`from ..core.config import settings`), per `CLAUDE.md`'s
+  relative-import rule. `celery[redis]` (one dependency, version-pinned
+  `redis` client) instead of separate `celery` + `redis` packages.
+- **`REDIS_URL` already existed** in `config.py`/`.env.example` from earlier
+  speculative work — no config changes needed, just consumed for the first
+  time.
+- **Missing `__init__.py` broke pytest's import resolution**: both
+  `app/worker/` and `tests/worker/` were created without `__init__.py`
+  (unlike `app/core/`, `tests/core/`, `tests/routers/`, which all have one).
+  Without it, pytest's default "prepend" import mode stops walking up at
+  `tests/worker/` itself instead of reaching `backend/`, so `backend/` never
+  lands on `sys.path` and `from app.core.config import settings` fails with
+  `ModuleNotFoundError: No module named 'app'`. Fixed by adding empty
+  `__init__.py` to both directories, matching existing convention.
+- **Two tests, deliberately different infra requirements**: an eager-mode
+  test (`task_always_eager=True`) that runs the task in-process with no live
+  Redis needed, and a non-eager test that calls the real broker via
+  `settings.REDIS_URL` and blocks on `result.get(timeout=10)` for an actual
+  worker to process it — requires `docker compose up`/`make worker` already
+  running before `pytest` starts, with the timeout turning "no worker
+  running" into a fast failure instead of a hang. Consistent with this repo's
+  existing pattern of testing against live infra (Supabase, Zilliz) rather
+  than mocking.
+- **`worker.dockerfile` added as a separate Dockerfile** (not reusing the
+  existing `Dockerfile`), with `CMD` swapped from running `fastapi` to
+  `celery -A app.worker.celery_app worker --loglevel=info`, using the same
+  direct-venv-binary exec form as the original.
+- **No `docker-compose.yml`/`compose.yaml` existed anywhere in this repo
+  before this ticket** — Railway/Vercel deploys (CAN-35) were configured
+  directly via dashboard. Scope here is deliberately just `redis` +
+  `redis-commander` (+ a `worker` block, currently commented out) — the
+  FastAPI `api` keeps running locally via `make dev` per `CLAUDE.md`, it just
+  needs Redis reachable on `localhost:6379`. `worker` is run locally via the
+  new `make worker` Makefile target for now rather than containerized;
+  the `worker.dockerfile`-based compose service exists but is commented out
+  by choice, ready for when it's needed (e.g. M2-D4's Railway deploy).
+- Added `redis-commander` (web UI at `localhost:8081`) as a third compose
+  service for inspecting queue/keys during local dev — not part of any
+  deploy, dev-only convenience.
+
+### State at end of session
+
+- `app/worker/celery_app.py`, `tasks.py`, `__init__.py`: Celery app wired to
+  `settings.REDIS_URL` as broker+backend, dummy `add` task.
+- `tests/worker/test_tasks.py` (+ `__init__.py`): eager-mode test passing
+  standalone; non-eager real-broker test passing with `redis` (+ a worker)
+  running.
+- `compose.yaml`: `redis`, `redis-commander` active; `worker` service block
+  present but commented out.
+- `worker.dockerfile`: standalone Dockerfile for the worker container, CMD
+  runs the Celery worker.
+- `Makefile`: new `worker` target (`uv run celery -A app.worker.celery_app
+  worker --loglevel=info`).
+- `pyproject.toml`/`uv.lock`: `celery[redis]>=5.6.3` added.
+- Design spec: `docs/superpowers/specs/2026-06-25-celery-redis-worker-design.md`.
+- `ruff check`/`format --check` clean on the new worker code.
