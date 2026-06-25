@@ -17,3 +17,6 @@ fix:
 
 format:
 	uv run ruff format .
+
+worker:
+	uv run celery -A app.worker.celery_app worker --loglevel=info
