@@ -2,6 +2,7 @@ import os
 import tempfile
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from pydantic import BaseModel
 
 from ..core.chunker import chunk_text
 from ..core.config import settings
@@ -10,7 +11,6 @@ from ..core.embedder import embed
 from ..core.extractors import extract_text
 from ..core.vector_store import create_collection_if_not_exists, upsert
 from ..dependencies import get_current_tenant_id
-from pydantic import BaseModel
 from ..worker.tasks import ingest_url_task
 
 router = APIRouter(prefix="/ingest", tags=["ingestion"])

@@ -8,6 +8,8 @@ from app.core.database import supabase
 from app.core.embedder import embed
 from app.core.vector_store import (
     client as milvus_client,
+)
+from app.core.vector_store import (
     create_collection_if_not_exists,
     upsert,
     vector_search,
