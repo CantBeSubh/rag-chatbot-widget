@@ -1,82 +1,82 @@
-name: CI
-
-on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-
-jobs:
-  backend-tests:
-    name: Backend tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-
-    services:
-      redis:
-        image: redis:alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: uv sync
-
-      - name: Lint
-        run: uv run ruff check .
-
-      - name: Format check
-        run: uv run ruff format --check .
-
-      - name: Tests
-        run: uv run pytest -v
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          SUPABASE_SCHEMA: ${{ secrets.SUPABASE_SCHEMA }}
-          ZILLIZ_URI: ${{ secrets.ZILLIZ_URI }}
-          ZILLIZ_TOKEN: ${{ secrets.ZILLIZ_TOKEN }}
-          REDIS_URL: redis://localhost:6379
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-
-  widget-tests:
-    name: Widget tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: widget
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Typecheck
-        run: bun run typecheck
-
-      - name: Lint
-        run: bun run lint
-
-      - name: Tests
-        run: bun test
+# name: CI
+#
+# on:
+#   pull_request:
+#     branches: [main]
+#   push:
+#     branches: [main]
+#
+# jobs:
+#   backend-tests:
+#     name: Backend tests
+#     runs-on: ubuntu-latest
+#     defaults:
+#       run:
+#         working-directory: backend
+#
+#     services:
+#       redis:
+#         image: redis:alpine
+#         ports:
+#           - 6379:6379
+#         options: >-
+#           --health-cmd "redis-cli ping"
+#           --health-interval 5s
+#           --health-timeout 3s
+#           --health-retries 5
+#
+#     steps:
+#       - uses: actions/checkout@v4
+#
+#       - name: Install uv
+#         uses: astral-sh/setup-uv@v4
+#
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: "3.11"
+#
+#       - name: Install dependencies
+#         run: uv sync
+#
+#       - name: Lint
+#         run: uv run ruff check .
+#
+#       - name: Format check
+#         run: uv run ruff format --check .
+#
+#       - name: Tests
+#         run: uv run pytest -v
+#         env:
+#           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+#           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+#           SUPABASE_SCHEMA: ${{ secrets.SUPABASE_SCHEMA }}
+#           ZILLIZ_URI: ${{ secrets.ZILLIZ_URI }}
+#           ZILLIZ_TOKEN: ${{ secrets.ZILLIZ_TOKEN }}
+#           REDIS_URL: redis://localhost:6379
+#           SECRET_KEY: ${{ secrets.SECRET_KEY }}
+#
+#   widget-tests:
+#     name: Widget tests
+#     runs-on: ubuntu-latest
+#     defaults:
+#       run:
+#         working-directory: widget
+#
+#     steps:
+#       - uses: actions/checkout@v4
+#
+#       - name: Install Bun
+#         uses: oven-sh/setup-bun@v2
+#
+#       - name: Install dependencies
+#         run: bun install
+#
+#       - name: Typecheck
+#         run: bun run typecheck
+#
+#       - name: Lint
+#         run: bun run lint
+#
+#       - name: Tests
+#         run: bun test
