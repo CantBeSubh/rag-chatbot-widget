@@ -5,8 +5,8 @@ import { Loader2 } from "lucide-react"
 import { DataTable } from "@/components/ui/data-table"
 
 import { AddUrlDialog } from "./_components/add-url-dialog/view"
-import { UploadFileDialog } from "./_components/upload-file-dialog/view"
 import { getColumns } from "./_components/columns"
+import { UploadFileDialog } from "./_components/upload-file-dialog/view"
 import { useSourcesPage } from "./logic"
 
 export function SourcesView() {

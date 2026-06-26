@@ -1,18 +1,19 @@
 "use client"
 
+import { useState } from "react"
+
 import {
   ColumnDef,
   ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table"
-import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -92,7 +93,7 @@ export function DataTable<TData, TValue>({
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} of {table.getRowCount()} row(s)
+          {table.getPaginationRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s)
         </p>
         <div className="flex gap-2">
           <Button
