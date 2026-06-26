@@ -1,7 +1,7 @@
 "use client"
 
 import { useConfigPage } from "./logic"
-import { WidgetPreview } from "@/components/widget-preview"
+import { WidgetPreview } from "@/views/dashboard/config/_components/widget-preview"
 import { AllowedDomainsInput } from "./_components/allowed-domains-input/view"
 import { Input } from "@/components/ui/input"
 

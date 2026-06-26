@@ -14,7 +14,6 @@ export function WidgetPreview({ config }: WidgetPreviewProps) {
       className="flex flex-col rounded-lg border border-gray-200 overflow-hidden shadow-sm"
       style={{ width: "280px" }}
     >
-      {/* Header */}
       <div
         className="px-4 py-3 text-white font-semibold"
         style={{ backgroundColor: color }}
@@ -22,7 +21,6 @@ export function WidgetPreview({ config }: WidgetPreviewProps) {
         {botName}
       </div>
 
-      {/* Chat area */}
       <div className="flex-1 p-4 bg-white flex flex-col gap-3 min-h-[200px]">
         <div className="flex justify-start">
           <div className="bg-gray-100 rounded-lg px-3 py-2 text-sm text-gray-800 max-w-[80%]">
@@ -31,7 +29,6 @@ export function WidgetPreview({ config }: WidgetPreviewProps) {
         </div>
       </div>
 
-      {/* Input area */}
       <div className="border-t border-gray-200 p-3 bg-white flex gap-2">
         <input
           type="text"
