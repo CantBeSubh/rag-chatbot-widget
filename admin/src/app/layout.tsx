@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
-import { ThemeProvider } from "@/components/theme-provider"
+import { Providers } from "@/providers"
 import { Geist, Geist_Mono } from "next/font/google"
-import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs"
+import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -32,13 +32,7 @@ export default function RootLayout({
 
     >
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <ClerkProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+        <Providers>
             <header className="flex justify-end items-center p-4 gap-4 h-16">
               <Show when="signed-out">
                 <SignInButton />
@@ -53,8 +47,7 @@ export default function RootLayout({
               </Show>
             </header>
             {children}
-          </ThemeProvider>
-        </ClerkProvider>
+        </Providers>
       </body>
     </html>
   )
