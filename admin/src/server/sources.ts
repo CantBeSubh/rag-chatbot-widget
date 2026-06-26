@@ -1,6 +1,7 @@
 "use server"
 
 import { cookies } from "next/headers"
+import { apiFetch } from "./base"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL!
 
@@ -28,20 +29,6 @@ export type IngestFileResponse = {
   source_id: string;
   chunks_ingested: number;
 };
-
-async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const jar = await cookies()
-  const apiKey = jar.get("rag_api_key")?.value ?? ""
-
-  return fetch(`${BACKEND_URL}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-      ...init.headers,
-    },
-  })
-}
 
 export async function getSources(): Promise<Source[]> {
   const res = await apiFetch("/sources")
