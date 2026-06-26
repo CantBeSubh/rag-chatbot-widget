@@ -692,3 +692,14 @@ fields are already stored in Zilliz per chunk; added them to the response.
   `url` and `text` fields in source citations.
 - Commits: `f06e0c3` (solo pool), `f68c58c` (crawler), `51decb2` (dedup),
   `8d95c04` (rag), `c6d6fc8` (test commands doc).
+
+## 2026-06-26 — Config page shadcn refactor
+
+- Added shadcn components via `bunx shadcn add`: `label`, `card`, `skeleton`,
+  `separator`, `field` (v4 Field API replaces legacy Form component).
+- Refactored `admin/src/views/dashboard/config/view.tsx` to use `Card`,
+  `Field`/`FieldGroup`/`FieldLabel`/`FieldError`, `Button`, `Skeleton`, and
+  `Controller` for allowed domains.
+- Updated `AllowedDomainsInput` sub-components to use
+  shadcn `Input`, `Button`, `Badge`, `Separator` instead of raw HTML + gray
+  Tailwind classes.
