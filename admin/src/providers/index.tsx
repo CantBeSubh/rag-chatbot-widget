@@ -1,6 +1,6 @@
-import { AppClerkProvider } from "./clerk-provider";
-import { QueryProvider } from "./query-provider";
-import { ThemeProvider } from "./theme-provider";
+import { AppClerkProvider } from "./clerk-provider"
+import { QueryProvider } from "./query-provider"
+import { ThemeProvider } from "./theme-provider"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -11,5 +11,5 @@ export function Providers({ children }: { children: React.ReactNode }) {
         </ThemeProvider>
       </QueryProvider>
     </AppClerkProvider>
-  );
+  )
 }
