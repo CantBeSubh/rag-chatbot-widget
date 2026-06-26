@@ -13,6 +13,7 @@ export async function getConfig(): Promise<WidgetConfig> {
   try {
     const res = await apiFetch("/config")
     if (!res.ok) throw new Error(`getConfig dailed: ${res.status}`)
+    // console.log(await res.json())
     return res.json()
   }
   catch (error) {

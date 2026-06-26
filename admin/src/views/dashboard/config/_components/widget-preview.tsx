@@ -33,16 +33,15 @@ export function WidgetPreview({ config }: WidgetPreviewProps) {
         <input
           type="text"
           placeholder={placeholder}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-offset-0"
+          className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-offset-0 text-black"
           style={{ "--tw-ring-color": color } as any}
           disabled
         />
         <button
           className="p-2 rounded text-white flex-shrink-0"
           style={{ backgroundColor: color }}
-          disabled
         >
-          💬
+          Send
         </button>
       </div>
     </div>

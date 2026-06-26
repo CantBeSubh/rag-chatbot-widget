@@ -1,15 +1,31 @@
 "use client"
 
+import { Plus, X } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { FieldError } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+
 import { AllowedDomainsInputProps } from "./interface"
 import { useAllowedDomainsInput } from "./logic"
 
 export function AllowedDomainsInput({ value, onChange }: AllowedDomainsInputProps) {
-  const { inputValue, setInputValue, setError, handleKeyDown, addDomain, removeDomain, error } = useAllowedDomainsInput({ value, onChange })
+  const {
+    inputValue,
+    setInputValue,
+    setError,
+    handleKeyDown,
+    addDomain,
+    removeDomain,
+    error,
+  } = useAllowedDomainsInput({ value, onChange })
 
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
-        <input
+        <Input
+          id="allowed_domains"
           type="text"
           value={inputValue}
           onChange={(e) => {
@@ -18,34 +34,35 @@ export function AllowedDomainsInput({ value, onChange }: AllowedDomainsInputProp
           }}
           onKeyDown={handleKeyDown}
           placeholder="example.com"
-          className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex-1"
         />
-        <button
-          onClick={addDomain}
-          className="px-4 py-2 bg-indigo-600 text-white rounded text-sm font-medium hover:bg-indigo-700"
-        >
+        <Button type="button" size="sm" onClick={addDomain}>
+          <Plus />
           Add
-        </button>
+        </Button>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <FieldError>{error || null}</FieldError>
 
-      <div className="flex flex-wrap gap-2">
-        {value.map((domain) => (
-          <div
-            key={domain}
-            className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-sm"
-          >
-            <span>{domain}</span>
-            <button
-              onClick={() => removeDomain(domain)}
-              className="text-gray-600 hover:text-gray-900 font-bold text-lg leading-none"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-      </div>
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {value.map((domain) => (
+            <Badge key={domain} variant="secondary" className="gap-1 pr-1">
+              {domain}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                className="size-4 hover:bg-transparent"
+                onClick={() => removeDomain(domain)}
+                aria-label={`Remove ${domain}`}
+              >
+                <X />
+              </Button>
+            </Badge>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

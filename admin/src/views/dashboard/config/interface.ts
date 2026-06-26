@@ -11,7 +11,7 @@ export const schema = z.object({
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color"),
   placeholder: z.string().min(1, "Placeholder is required").max(100),
-  allowed_domains: z.array(z.string().regex(DOMAIN_REGEX)),
+  allowed_domains: z.array(z.string())
 })
 
 export type ConfigFormData = z.infer<typeof schema>
