@@ -1,2 +1,3 @@
 cd backend && make lint && make format-check
 cd ../widget && bun run typecheck && bun run lint && bun run format:check
+cd ../admin && bun run typecheck && bun run lint
