@@ -11,7 +11,7 @@ router = APIRouter(prefix="/logs", tags=["logs"])
 async def get_logs(
     tenant_id: str = Depends(get_current_tenant_id),
     page: int = Query(1, ge=1),
-    per_page: int = Query(25, ge=1, le=100),
+    per_page: int = Query(25, ge=1, le=1000),
     unanswered_only: bool = Query(False),
     date_from: str = Query(None),
     date_to: str = Query(None),

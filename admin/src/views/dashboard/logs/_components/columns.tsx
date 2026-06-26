@@ -1,11 +1,11 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
+import dayjs from "dayjs"
+import relativeTime from "dayjs/plugin/relativeTime"
 
 import { Badge } from "@/components/ui/badge"
 import { ChatLog } from "@/server/logs"
-import dayjs from "dayjs"
-import relativeTime from "dayjs/plugin/relativeTime"
 dayjs.extend(relativeTime)
 
 const UNANSWERED_PHRASE = "don't have information"
