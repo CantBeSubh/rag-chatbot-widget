@@ -3,7 +3,6 @@ import { UseFormReturn } from "react-hook-form"
 import { z } from "zod"
 
 import { WidgetConfig } from "@/server/config"
-const DOMAIN_REGEX = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 
 export const schema = z.object({
   bot_name: z.string().min(1, "Bot name is required").max(50),

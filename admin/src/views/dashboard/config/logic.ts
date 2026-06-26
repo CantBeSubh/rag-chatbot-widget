@@ -39,6 +39,7 @@ export function useConfigPage(): UseConfigPageReturn {
     loadConfig()
   }, [form])
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const watchedValues = form.watch()
   const preview: Partial<WidgetConfig> = {
     bot_name: watchedValues.bot_name,
