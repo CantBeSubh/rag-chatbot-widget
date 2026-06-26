@@ -1,5 +1,10 @@
+import { ThemeToggle } from "@/components/theme-toggle"
+
 export default function Home() {
   return (
-    <div>HELLO WORLD!</div>
+
+    <div>HELLO WORLD!
+      <ThemeToggle />
+    </div>
   )
 }
