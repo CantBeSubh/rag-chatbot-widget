@@ -1,29 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useForm, UseFormReturn } from "react-hook-form"
+import { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
+
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+
 import { getConfig, updateConfig, WidgetConfig } from "@/server/config"
 
-const schema = z.object({
-  bot_name: z.string().min(1, "Bot name is required").max(50),
-  color: z
-    .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, "Must be a valid hex color"),
-  placeholder: z.string().min(1, "Placeholder is required").max(100),
-  allowed_domains: z.array(z.string()),
-})
-
-export type ConfigFormData = z.infer<typeof schema>
-
-interface UseConfigPageReturn {
-  form: UseFormReturn<ConfigFormData>
-  preview: Partial<WidgetConfig>
-  onSubmit: (data: ConfigFormData) => Promise<void>
-  saving: boolean
-  isLoading: boolean
-}
+import { ConfigFormData, schema, UseConfigPageReturn } from "./interface"
 
 export function useConfigPage(): UseConfigPageReturn {
   const [saving, setSaving] = useState(false)
@@ -39,7 +23,6 @@ export function useConfigPage(): UseConfigPageReturn {
     },
   })
 
-  // Load initial config on mount
   useEffect(() => {
     const loadConfig = async () => {
       setIsLoading(true)
@@ -56,7 +39,6 @@ export function useConfigPage(): UseConfigPageReturn {
     loadConfig()
   }, [form])
 
-  // Watch form values for live preview
   const watchedValues = form.watch()
   const preview: Partial<WidgetConfig> = {
     bot_name: watchedValues.bot_name,
@@ -69,10 +51,10 @@ export function useConfigPage(): UseConfigPageReturn {
     setSaving(true)
     try {
       await updateConfig(data)
-      // Optionally show success toast here
+      // TODO: Optionally show success toast here
     } catch (error) {
       console.error("Failed to save config:", error)
-      // Optionally show error toast here
+      // TODO: Optionally show error toast here
     } finally {
       setSaving(false)
     }
