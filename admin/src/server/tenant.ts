@@ -1,4 +1,4 @@
-import { refresh } from "next/cache"
+"use server"
 
 import { auth, clerkClient } from "@clerk/nextjs/server"
 
@@ -11,9 +11,10 @@ export async function deleteAll() {
     throw Error("not authenticated")
   }
 
-  const client = await clerkClient()
-  await client.users.deleteUser(userId)
   await apiFetch("/tenant", { method: "DELETE" })
 
-  return refresh()
+  const client = await clerkClient()
+  await client.users.deleteUser(userId)
+
+  return true
 }

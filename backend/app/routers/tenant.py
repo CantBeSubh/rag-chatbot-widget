@@ -16,7 +16,7 @@ async def get_tenant(tenant_id: str = Depends(get_current_tenant_id)) -> dict:
         supabase.schema(settings.SUPABASE_SCHEMA)
         .table("tenants")
         .select("*")
-        .eq("tenant_id", tenant_id)
+        .eq("id", tenant_id)
         .single()
         .execute()
     )
@@ -28,12 +28,12 @@ async def get_tenant(tenant_id: str = Depends(get_current_tenant_id)) -> dict:
 
 
 @router.delete("")
-async def delete_tenant(tenant_id: str = Depends(get_current_tenant_id)) -> dict:
+async def delete_tenant(tenant_id: str = Depends(get_current_tenant_id)) -> None:
     tenant = (
         supabase.schema(settings.SUPABASE_SCHEMA)
         .table("tenants")
         .select("*")
-        .eq("tenant_id", tenant_id)
+        .eq("id", tenant_id)
         .single()
         .execute()
     )
@@ -48,6 +48,7 @@ async def delete_tenant(tenant_id: str = Depends(get_current_tenant_id)) -> dict
         supabase.schema(settings.SUPABASE_SCHEMA)
         .table("tenants")
         .delete()
-        .eq("tenant_id", tenant_id)
+        .eq("id", tenant_id)
         .execute()
     )
+    return None

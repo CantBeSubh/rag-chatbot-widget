@@ -50,6 +50,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 
 import { useUser } from "@clerk/nextjs"
 import { Check, Code2, Copy } from "lucide-react"
@@ -137,17 +138,23 @@ function ScriptTagSection() {
 }
 
 export default function SettingPage() {
+  const { user } = useUser()
+  const router = useRouter()
+
   const handleDelete = async () => {
     //TODO: Implement this
 
     if (!window.confirm("Delete ENTIRE account? This cannot be undone.")) return
     await deleteAll()
+    user?.reload()
+    router.push("/")
+    router.refresh()
   }
   return (
     <div className="p-6">
 
       <ScriptTagSection />
-      <Button variant="destructive">DELETE</Button>
+      <Button variant="destructive" onClick={handleDelete}>DELETE</Button>
     </div>
   )
 }
