@@ -64,6 +64,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { deleteAll } from "@/server/tenant"
 
 function ScriptTagSection() {
   const user = useUser()?.user
@@ -136,9 +137,17 @@ function ScriptTagSection() {
 }
 
 export default function SettingPage() {
+  const handleDelete = async () => {
+    //TODO: Implement this
+
+    if (!window.confirm("Delete ENTIRE account? This cannot be undone.")) return
+    await deleteAll()
+  }
   return (
     <div className="p-6">
+
       <ScriptTagSection />
+      <Button variant="destructive">DELETE</Button>
     </div>
   )
 }
