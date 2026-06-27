@@ -9,7 +9,6 @@ import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ensureTenant } from "@/server/onboarding"
-import { ConfigView } from "@/views/dashboard/config/view"
 
 export default function OnboardingComponent() {
   const [error, setError] = useState("")
@@ -35,7 +34,7 @@ export default function OnboardingComponent() {
 
   const handleSubmit = async () => {
     await user?.reload()
-    router.push("/dashboard/sources")
+    router.push("/dashboard/config")
   }
 
   if (loading) {
@@ -60,10 +59,10 @@ export default function OnboardingComponent() {
     )
   }
 
-  return (<div>
-    <ConfigView />
-    <Button onClick={handleSubmit} variant="secondary">Continue to Dashboard</Button>
-    {error && <p className="text-red-600">Error: {error}</p>}
-  </div>
+  return (
+    <div className="size-screen flex justify-center items-center">
+      <Button onClick={handleSubmit} variant="secondary">Continue to Dashboard</Button>
+      {error && <p className="text-red-600">Error: {error}</p>}
+    </div>
   )
 }

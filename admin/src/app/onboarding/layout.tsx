@@ -6,7 +6,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const key = (await auth()).sessionClaims?.metadata.apikey
 
   if (!!key === true) {
-    redirect("/")
+    redirect("/dashboard/config")
   }
 
   return <>{children}</>
