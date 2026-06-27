@@ -1,12 +1,17 @@
 "use server"
-
-import { cookies } from "next/headers"
+import { auth } from "@clerk/nextjs/server"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL!
 
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const jar = await cookies()
-  const apiKey = jar.get("rag_api_key")?.value ?? ""
+
+  const { isAuthenticated } = await auth()
+
+  if (!isAuthenticated) {
+    throw Error("not authenticated")
+  }
+
+  const apiKey = (await auth()).sessionClaims?.metadata.apikey
 
   return fetch(`${BACKEND_URL}${path}`, {
     ...init,

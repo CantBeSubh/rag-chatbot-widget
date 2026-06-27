@@ -1,46 +1,69 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { useUser } from "@clerk/nextjs"
+import { Loader2 } from "lucide-react"
 
-import { completeOnboarding } from "@/server/clerk"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { ensureTenant } from "@/server/onboarding"
+import { ConfigView } from "@/views/dashboard/config/view"
 
 export default function OnboardingComponent() {
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(true)
+
   const { user } = useUser()
   const router = useRouter()
 
-  const handleSubmit = async (formData: FormData) => {
-    const res = await completeOnboarding(formData)
-    if (res?.message) {
-      // Forces a token refresh and refreshes the `User` object
-      await user?.reload()
-      router.push("/")
+  useEffect(() => {
+    async function bootstrap() {
+      try {
+        await ensureTenant()
+      } catch (err) {
+        setError(`${err}`)
+      }
+      finally {
+        setLoading(false)
+      }
     }
-    if (res?.error) {
-      setError(res?.error)
-    }
-  }
-  return (
-    <div>
-      <h1>Welcome</h1>
-      <form action={handleSubmit}>
-        <div>
-          <label>Application Name</label>
-          <p>Enter the name of your application.</p>
-          <input type="text" name="applicationName" required />
-        </div>
 
-        <div>
-          <label>Application Type</label>
-          <p>Describe the type of your application.</p>
-          <input type="text" name="applicationType" required />
-        </div>
-        {error && <p className="text-red-600">Error: {error}</p>}
-        <button type="submit">Submit</button>
-      </form>
-    </div>
+    bootstrap()
+  }, [])
+
+  const handleSubmit = async () => {
+    await user?.reload()
+    router.push("/dashboard/sources")
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center gap-4 py-10">
+            <Loader2 className="text-primary h-8 w-8 animate-spin" />
+
+            <div className="space-y-1 text-center">
+              <h2 className="text-lg font-semibold">
+                Creating your account
+              </h2>
+
+              <p className="text-muted-foreground text-sm">
+                Setting up your workspace. This will only take a few seconds.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  return (<div>
+    <ConfigView />
+    <Button onClick={handleSubmit} variant="secondary">Continue to Dashboard</Button>
+    {error && <p className="text-red-600">Error: {error}</p>}
+  </div>
   )
 }

@@ -51,6 +51,7 @@
 
 import { useEffect, useState } from "react"
 
+import { useUser } from "@clerk/nextjs"
 import { Check, Code2, Copy } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -63,9 +64,9 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { getApiFromCookie } from "@/server/setting"
 
 function ScriptTagSection() {
+  const user = useUser()?.user
   const [apiKey, setApiKey] = useState("")
   const [copied, setCopied] = useState(false)
 
@@ -73,12 +74,12 @@ function ScriptTagSection() {
 
   useEffect(() => {
     const loadKey = async () => {
-      const key = await getApiFromCookie()
-      setApiKey(key)
+      const key = user?.publicMetadata?.apikey as string
+      setApiKey(key ?? "error-no-key")
     }
 
     loadKey()
-  }, [])
+  }, [user])
 
   const copy = async () => {
     await navigator.clipboard.writeText(scriptTag)
