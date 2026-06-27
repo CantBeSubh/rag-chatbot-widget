@@ -1,0 +1,18 @@
+info:
+  name: DELETE ALL
+  type: http
+  seq: 8
+
+http:
+  method: DELETE
+  url: "{{local_url}}/tenant"
+  headers:
+    - name: Authorization
+      value: Bearer 19d124ca-98ba-467d-abf4-0cbe79006ca1
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

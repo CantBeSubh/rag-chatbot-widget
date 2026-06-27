@@ -17,6 +17,10 @@ def create_collection_if_not_exists(collection_name: str) -> None:
         )
 
 
+def delete_collection(collection_name: str) -> None:
+    client.drop_collection(collection_name=collection_name)
+
+
 def upsert(
     collection_name: str, vectors: list[list[float]], metadata: list[dict]
 ) -> None:

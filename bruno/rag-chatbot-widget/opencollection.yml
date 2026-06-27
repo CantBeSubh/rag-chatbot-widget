@@ -17,7 +17,7 @@ config:
 request:
   headers:
     - name: Authorization
-      value: Bearer a07763cb-8d73-4abf-8d1e-e53d5e6eb7ec
+      value: Bearer 19d124ca-98ba-467d-abf4-0cbe79006ca1
   variables:
     - name: local_url
       value: http://localhost:8000
