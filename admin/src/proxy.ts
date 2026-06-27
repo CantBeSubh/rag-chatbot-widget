@@ -10,27 +10,27 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
 
   // For users visiting /onboarding, don't try to redirect
   if (isAuthenticated && isOnboardingRoute(req)) {
-    console.log("user: authenticated and visitng onboarding route")
+    console.log("middleware: authenticated and visitng onboarding route")
     return NextResponse.next()
   }
 
   // If the user isn't signed in and the route is private, redirect to sign-in
   if (!isAuthenticated && !isPublicRoute(req)) {
-    console.log("user: not authenticated and visitng private route")
+    console.log("middleware: not authenticated and visitng private route")
     return redirectToSignIn({ returnBackUrl: req.url })
   }
 
   // Catch users who do not have `onboardingComplete: true` in their publicMetadata
   // Redirect them to the /onboarding route to complete onboarding
   if (isAuthenticated && !sessionClaims?.metadata?.apikey) {
-    console.log("user: authenticated and onboarding pending")
+    console.log("middleware: authenticated and onboarding pending")
     const onboardingUrl = new URL("/onboarding", req.url)
     return NextResponse.redirect(onboardingUrl)
   }
 
   // If the user is signed in and the route is protected, let them view.
   if (isAuthenticated && !isPublicRoute(req)) {
-    console.log("user: authenticated and private route")
+    console.log("middleware: authenticated and private route")
     return NextResponse.next()
   }
 
