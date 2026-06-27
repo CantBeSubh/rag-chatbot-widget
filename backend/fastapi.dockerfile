@@ -10,5 +10,9 @@ COPY . /app
 WORKDIR /app
 RUN uv sync --locked --no-cache
 
+
+# Install Playwright browser + OS dependencies
+RUN /app/.venv/bin/playwright install --with-deps chromium
+
 # Run the application.
 CMD ["/app/.venv/bin/fastapi", "run", "app/main.py", "--port", "80"]

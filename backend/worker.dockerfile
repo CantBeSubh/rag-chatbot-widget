@@ -11,5 +11,8 @@ COPY . /app
 WORKDIR /app
 RUN uv sync --locked --no-cache
 
+# Install Playwright browser + OS dependencies
+RUN /app/.venv/bin/playwright install --with-deps chromium
+
 # Run the worker.
 CMD ["/app/.venv/bin/celery", "-A", "app.worker.celery_app", "worker", "--loglevel=info"]
