@@ -1,12 +1,13 @@
 import json
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from ..core.config import settings
 from ..core.database import supabase
+from ..core.limiter import limiter
 from ..core.rag import answer, answer_stream
 from ..dependencies import get_widget_config
 
@@ -18,18 +19,20 @@ class ChatRequest(BaseModel):
 
 
 @router.post("")
+@limiter.limit("60/minute")
 async def chat(
-    request: ChatRequest,
+    request: Request,
+    body: ChatRequest,
     widget_config: Annotated[dict, Depends(get_widget_config)],
 ):
 
     tenant_id = widget_config.get("tenant_id", "")
     collection_name = f"tenant_{tenant_id.replace('-', '')}"
-    result = answer(request.question, collection_name)
+    result = answer(body.question, collection_name)
     supabase.schema(settings.SUPABASE_SCHEMA).table("chat_logs").insert(
         {
             "tenant_id": tenant_id,
-            "question": request.question,
+            "question": body.question,
             "answer": result["answer"],
             "sources_cited": result["sources"],
             "latency_ms": result["latency_ms"],
@@ -40,8 +43,10 @@ async def chat(
 
 
 @router.post("/stream")
+@limiter.limit("60/minute")
 async def chat_stream(
-    request: ChatRequest,
+    request: Request,
+    body: ChatRequest,
     widget_config: Annotated[dict, Depends(get_widget_config)],
 ):
     tenant_id = widget_config.get("tenant_id", "")
@@ -52,7 +57,7 @@ async def chat_stream(
         sources: list[dict] = []
         latency_ms = 0
 
-        async for event in answer_stream(request.question, collection_name):
+        async for event in answer_stream(body.question, collection_name):
             payload = json.loads(event["data"])
             if payload["type"] == "done":
                 answer_text = payload["answer"]
@@ -63,7 +68,7 @@ async def chat_stream(
         supabase.schema(settings.SUPABASE_SCHEMA).table("chat_logs").insert(
             {
                 "tenant_id": tenant_id,
-                "question": request.question,
+                "question": body.question,
                 "answer": answer_text,
                 "sources_cited": sources,
                 "latency_ms": latency_ms,

@@ -1,14 +1,17 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 
 from ..core.config import settings
 from ..core.database import supabase
+from ..core.limiter import limiter
 from ..dependencies import get_current_tenant_id
 
 router = APIRouter(prefix="/logs", tags=["logs"])
 
 
 @router.get("")
+@limiter.limit("120/minute")
 async def get_logs(
+    request: Request,
     tenant_id: str = Depends(get_current_tenant_id),
     page: int = Query(1, ge=1),
     per_page: int = Query(25, ge=1, le=1000),

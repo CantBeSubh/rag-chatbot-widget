@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ..core.config import settings
 from ..core.database import supabase
+from ..core.limiter import limiter
 from ..core.vector_store import delete_by_source
 from ..dependencies import get_current_tenant_id
 
@@ -9,7 +10,8 @@ router = APIRouter(prefix="/sources", tags=["sources"])
 
 
 @router.get("")
-async def list_sources(tenant_id: str = Depends(get_current_tenant_id)) -> list[dict]:
+@limiter.limit("120/minute")
+async def list_sources(request: Request, tenant_id: str = Depends(get_current_tenant_id)) -> list[dict]:
     result = (
         supabase.schema(settings.SUPABASE_SCHEMA)
         .table("sources")
@@ -22,7 +24,9 @@ async def list_sources(tenant_id: str = Depends(get_current_tenant_id)) -> list[
 
 
 @router.get("/{source_id}")
+@limiter.limit("120/minute")
 async def get_source(
+    request: Request,
     source_id: str,
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> dict:
@@ -40,7 +44,9 @@ async def get_source(
 
 
 @router.delete("/{source_id}")
+@limiter.limit("120/minute")
 async def delete_source(
+    request: Request,
     source_id: str,
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> dict:
