@@ -11,7 +11,7 @@ from .core.config import settings
 from .core.database import supabase
 from .core.limiter import limiter
 from .core.logging import configure_logging, get_logger
-from .routers import chat, config, ingest, logs, sources, tenant
+from .routers import chat, config, health, ingest, logs, sources, tenant
 
 configure_logging()
 logger = get_logger()
@@ -48,6 +48,7 @@ app.include_router(chat.router)
 app.include_router(sources.router)
 app.include_router(logs.router)
 app.include_router(tenant.router)
+app.include_router(health.router)
 
 
 @app.on_event("startup")
@@ -59,9 +60,3 @@ async def verify_db():
 @app.get("/")
 async def root():
     return {"message": "RAG Chatbot Widget API"}
-
-
-@app.get("/health")
-@limiter.exempt
-async def health():
-    return {"status": "ok"}
