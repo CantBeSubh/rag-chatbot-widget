@@ -22,6 +22,7 @@ def add(self, x: int, y: int) -> int:  # noqa: ARG001
     default_retry_delay=60,  # Wait 60s before retrying on transient failures
     autoretry_for=(Exception,),
     retry_backoff=True,  # Exponential backoff: 60s, 120s, 240s
+    retry_jitter=True,
 )
 def ingest_url_task(
     self, source_id: str, tenant_id: str, url: str, max_pages: int = 50
