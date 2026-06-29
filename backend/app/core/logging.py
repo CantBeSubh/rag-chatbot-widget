@@ -1,22 +1,26 @@
 import logging
+import sys
 
-from uvicorn.logging import DefaultFormatter
-
-FILENAME_WIDTH = 17
-
-
-class _FileNameFormatter(DefaultFormatter):
-    def formatMessage(self, record: logging.LogRecord) -> str:
-        record.filename_field = f"{record.filename}:".ljust(FILENAME_WIDTH)
-        return super().formatMessage(record)
+import structlog
 
 
-def setup_logging(level: int = logging.INFO) -> None:
-    handler = logging.StreamHandler()
-    handler.setFormatter(
-        _FileNameFormatter(
-            fmt="%(asctime)s %(levelprefix)s %(filename_field)s %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
+def configure_logging() -> None:
+    structlog.configure(
+        processors=[
+            structlog.stdlib.add_log_level,
+            structlog.processors.TimeStamper(fmt="iso", key="timestamp"),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.JSONRenderer(),
+        ],
+        wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
+        context_class=dict,
+        logger_factory=structlog.PrintLoggerFactory(file=sys.stdout),
+        cache_logger_on_first_use=True,
     )
-    logging.basicConfig(level=level, handlers=[handler])
+    # Route stdlib logging (third-party libs) through the same stream as JSON
+    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
+
+
+def get_logger() -> structlog.BoundLogger:
+    return structlog.get_logger()

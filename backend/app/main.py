@@ -1,5 +1,3 @@
-import logging
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -8,11 +6,11 @@ from slowapi.errors import RateLimitExceeded
 from .core.config import settings
 from .core.database import supabase
 from .core.limiter import limiter
-from .core.logging import setup_logging
+from .core.logging import configure_logging, get_logger
 from .routers import chat, config, ingest, logs, sources, tenant
 
-setup_logging()
-logger = logging.getLogger(__name__)
+configure_logging()
+logger = get_logger()
 
 app = FastAPI()
 
@@ -37,14 +35,8 @@ app.include_router(tenant.router)
 
 @app.on_event("startup")
 async def verify_db():
-    result = (
-        supabase.schema(settings.SUPABASE_SCHEMA)
-        .table("tenants")
-        .select("id")
-        .limit(1)
-        .execute()
-    )
-    logger.info(f"Supabase connected to {settings.SUPABASE_SCHEMA} schema: {result}")
+    supabase.schema(settings.SUPABASE_SCHEMA).table("tenants").select("id").limit(1).execute()
+    logger.info("db_connected", schema=settings.SUPABASE_SCHEMA)
 
 
 @app.get("/")
