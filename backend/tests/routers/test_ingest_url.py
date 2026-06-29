@@ -14,7 +14,7 @@ test_client = TestClient(app)
 
 @pytest.fixture
 def test_tenant():
-    result = _SCHEMA.table("tenants").insert({}).execute()
+    result = _SCHEMA.table("tenants").insert({"user_id": str(uuid.uuid4())}).execute()
     tenant = result.data[0]
     yield tenant
     _SCHEMA.table("sources").delete().eq("tenant_id", tenant["id"]).execute()

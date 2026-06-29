@@ -35,17 +35,17 @@ def filter_new_chunks(chunks: list[str], tenant_id: str, source_id: str) -> list
         )
         existing_hashes.update(row["hash"] for row in result.data)
 
-    # Deduplicate within the batch too — same hash appearing on multiple pages
-    # (e.g. nav/footer boilerplate, locale variants) must only be indexed once.
-    seen: set[str] = set()
+    # Return all indices not already stored, but insert each hash only once.
+    seen_for_insert: set[str] = set()
     new_indices: list[int] = []
     rows = []
     for i, h in enumerate(hashes):
-        if h in existing_hashes or h in seen:
+        if h in existing_hashes:
             continue
-        seen.add(h)
         new_indices.append(i)
-        rows.append({"hash": h, "tenant_id": tenant_id, "source_id": source_id})
+        if h not in seen_for_insert:
+            seen_for_insert.add(h)
+            rows.append({"hash": h, "tenant_id": tenant_id, "source_id": source_id})
 
     if rows:
         schema.table("chunk_hashes").upsert(

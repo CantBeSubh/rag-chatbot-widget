@@ -12,7 +12,7 @@ _SCHEMA = supabase.schema(settings.SUPABASE_SCHEMA)
 
 @pytest.fixture
 def test_tenant():
-    result = _SCHEMA.table("tenants").insert({}).execute()
+    result = _SCHEMA.table("tenants").insert({"user_id": str(uuid.uuid4())}).execute()
     tenant = result.data[0]
     yield tenant
     _SCHEMA.table("tenants").delete().eq("id", tenant["id"]).execute()
