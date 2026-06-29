@@ -1,5 +1,9 @@
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -11,6 +15,19 @@ from .routers import chat, config, ingest, logs, sources, tenant
 
 configure_logging()
 logger = get_logger()
+
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        integrations=[
+            StarletteIntegration(),
+            FastApiIntegration(),
+            CeleryIntegration(),
+        ],
+        traces_sample_rate=0.1,
+        send_default_pii=False,
+        environment=settings.ENVIRONMENT,
+    )
 
 app = FastAPI()
 
