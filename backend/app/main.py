@@ -2,9 +2,12 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from .core.config import settings
 from .core.database import supabase
+from .core.limiter import limiter
 from .core.logging import setup_logging
 from .routers import chat, config, ingest, logs, sources, tenant
 
@@ -12,6 +15,9 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,3 +50,9 @@ async def verify_db():
 @app.get("/")
 async def root():
     return {"message": "RAG Chatbot Widget API"}
+
+
+@app.get("/health")
+@limiter.exempt
+async def health():
+    return {"status": "ok"}

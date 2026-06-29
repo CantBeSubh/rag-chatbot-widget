@@ -1,7 +1,7 @@
 import os
 import tempfile
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 
 from ..core.chunker import chunk_text
@@ -9,6 +9,7 @@ from ..core.config import settings
 from ..core.database import supabase
 from ..core.embedder import embed
 from ..core.extractors import extract_text
+from ..core.limiter import limiter
 from ..core.vector_store import create_collection_if_not_exists, upsert
 from ..dependencies import get_current_tenant_id
 from ..worker.tasks import ingest_url_task
@@ -22,7 +23,9 @@ class IngestURLRequest(BaseModel):
 
 
 @router.post("/file")
+@limiter.limit("10/minute")
 async def ingest_file(
+    request: Request,
     file: UploadFile = File(...),
     tenant_id: str = Depends(get_current_tenant_id),
 ):
@@ -85,8 +88,10 @@ async def ingest_file(
 
 
 @router.post("/url")
+@limiter.limit("10/minute")
 async def ingest_url(
-    request: IngestURLRequest,
+    request: Request,
+    body: IngestURLRequest,
     tenant_id: str = Depends(get_current_tenant_id),
 ):
     schema = supabase.schema(settings.SUPABASE_SCHEMA)
@@ -97,7 +102,7 @@ async def ingest_url(
             {
                 "tenant_id": tenant_id,
                 "type": "url",
-                "url": request.url,
+                "url": body.url,
                 "status": "queued",
             }
         )
@@ -108,8 +113,8 @@ async def ingest_url(
     ingest_url_task.delay(
         source_id=source_id,
         tenant_id=tenant_id,
-        url=request.url,
-        max_pages=request.max_pages,
+        url=body.url,
+        max_pages=body.max_pages,
     )
 
     return {
