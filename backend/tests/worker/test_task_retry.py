@@ -13,7 +13,13 @@ _SCHEMA = supabase.schema(settings.SUPABASE_SCHEMA)
 
 @pytest.fixture(autouse=True)
 def eager_mode():
+    orig_eager = celery_app.conf.task_always_eager
+    orig_propagate = celery_app.conf.task_eager_propagates
     celery_app.conf.update(task_always_eager=True, task_eager_propagates=True)
+    yield
+    celery_app.conf.update(
+        task_always_eager=orig_eager, task_eager_propagates=orig_propagate
+    )
 
 
 @pytest.fixture
@@ -67,7 +73,7 @@ def test_ingest_url_task_marks_error_when_all_retries_exhausted(
     assert "network timeout" in updated["error_message"]
 
 
-def test_ingest_url_task_does_not_mark_error_on_first_retry(source_and_tenant):
+def test_ingest_url_task_retries_on_first_failure(source_and_tenant):
     """On the first failure (retries=0, max=3), status must NOT be set to error."""
     tenant, source = source_and_tenant
 

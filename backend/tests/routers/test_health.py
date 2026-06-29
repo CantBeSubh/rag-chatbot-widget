@@ -23,7 +23,7 @@ def test_health_returns_200_when_all_deps_ok():
         limit.execute.return_value = mock_result
 
         mock_zilliz.list_collections.return_value = []
-        mock_redis_factory.return_value.ping.return_value = True
+        mock_redis_factory.return_value.__enter__.return_value.ping.return_value = True
 
         response = client.get("/health")
 
@@ -44,7 +44,7 @@ def test_health_returns_degraded_when_supabase_fails():
     ):
         mock_supa.schema.side_effect = Exception("connection refused")
         mock_zilliz.list_collections.return_value = []
-        mock_redis_factory.return_value.ping.return_value = True
+        mock_redis_factory.return_value.__enter__.return_value.ping.return_value = True
 
         response = client.get("/health")
 
@@ -72,7 +72,8 @@ def test_health_returns_degraded_when_redis_fails():
         limit.execute.return_value = mock_result
 
         mock_zilliz.list_collections.return_value = []
-        mock_redis_factory.return_value.ping.side_effect = Exception("redis down")
+        redis_mock = mock_redis_factory.return_value.__enter__.return_value
+        redis_mock.ping.side_effect = Exception("redis down")
 
         response = client.get("/health")
 
@@ -98,7 +99,7 @@ def test_health_returns_degraded_when_zilliz_fails():
         limit.execute.return_value = mock_result
 
         mock_zilliz.list_collections.side_effect = Exception("zilliz unreachable")
-        mock_redis_factory.return_value.ping.return_value = True
+        mock_redis_factory.return_value.__enter__.return_value.ping.return_value = True
 
         response = client.get("/health")
 

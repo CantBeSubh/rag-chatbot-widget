@@ -25,8 +25,8 @@ async def health_check() -> dict:
 
     # Redis
     try:
-        r = redis.from_url(settings.REDIS_URL)
-        r.ping()
+        with redis.from_url(settings.REDIS_URL) as r:
+            r.ping()
         checks["redis"] = "ok"
     except Exception as e:
         checks["redis"] = f"error: {str(e)[:100]}"
