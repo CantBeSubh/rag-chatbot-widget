@@ -25,10 +25,10 @@ async def chat(
     body: ChatRequest,
     widget_config: Annotated[dict, Depends(get_widget_config)],
 ):
-
     tenant_id = widget_config.get("tenant_id", "")
     collection_name = f"tenant_{tenant_id.replace('-', '')}"
-    result = answer(body.question, collection_name)
+    llm_config = widget_config.get("llm_config")
+    result = answer(body.question, collection_name, llm_config=llm_config)
     supabase.schema(settings.SUPABASE_SCHEMA).table("chat_logs").insert(
         {
             "tenant_id": tenant_id,
@@ -51,13 +51,14 @@ async def chat_stream(
 ):
     tenant_id = widget_config.get("tenant_id", "")
     collection_name = f"tenant_{tenant_id.replace('-', '')}"
+    llm_config = widget_config.get("llm_config")
 
     async def event_generator():
         answer_text = ""
         sources: list[dict] = []
         latency_ms = 0
 
-        async for event in answer_stream(body.question, collection_name):
+        async for event in answer_stream(body.question, collection_name, llm_config=llm_config):
             payload = json.loads(event["data"])
             if payload["type"] == "done":
                 answer_text = payload["answer"]
