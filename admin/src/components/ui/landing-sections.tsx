@@ -1,8 +1,8 @@
 "use client"
 
 import { PricingTable } from "@clerk/nextjs"
-import { Code2, Database, Layers, MessageSquare, Shield, SlidersHorizontal } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
+import { Code2, Database, Layers, MessageSquare, Shield, SlidersHorizontal } from "lucide-react"
 
 const features: { icon: LucideIcon; title: string; description: string }[] = [
   {
@@ -40,13 +40,13 @@ const features: { icon: LucideIcon; title: string; description: string }[] = [
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="py-24 px-8 bg-[#0d0b09] border-t border-white/5">
+    <section id="features" className="pb-24 pt-36 px-8 bg-[#0d0b09] border-t border-white/5">
       <div className="max-w-5xl mx-auto">
         <p className="text-xs text-white/40 tracking-widest uppercase mb-3">Features</p>
-        <h2 className="text-3xl font-light text-white mb-16 max-w-xs leading-tight">
+        <h2 className="text-3xl font-light text-white mb-10 max-w-xs leading-tight">
           Everything your knowledge base needs
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map(({ icon: Icon, title, description }) => (
             <div key={title} className="group">
               <div className="w-6 h-6 mb-4 text-white/30 group-hover:text-indigo-400 transition-colors duration-200">
@@ -64,10 +64,10 @@ export function FeaturesSection() {
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="py-24 px-8 bg-[#0a0908] border-t border-white/5">
+    <section id="pricing" className="py-12 px-8 bg-[#0a0908] border-t border-white/5">
       <div className="max-w-4xl mx-auto">
         <p className="text-xs text-white/40 tracking-widest uppercase mb-3">Pricing</p>
-        <h2 className="text-3xl font-light text-white mb-16">Simple, transparent pricing</h2>
+        <h2 className="text-3xl font-light text-white mb-8">Simple, transparent pricing</h2>
         <PricingTable />
       </div>
     </section>
