@@ -1,9 +1,11 @@
+import type { WidgetConfig } from './config'
+
 export interface WidgetElements {
   shadow: ShadowRoot
   panel: HTMLElement
 }
 
-export function buildWidget(): WidgetElements {
+export function buildWidget(config: WidgetConfig): WidgetElements {
   const host = document.createElement('div')
   host.id = 'rag-widget-host'
   host.style.cssText = 'position: fixed; bottom: 24px; right: 24px; z-index: 99999;'
@@ -13,16 +15,17 @@ export function buildWidget(): WidgetElements {
 
   const style = document.createElement('style')
   style.textContent = `
+    :host { --widget-color: ${config.color}; }
     * { box-sizing: border-box; font-family: system-ui, sans-serif; }
 
     #bubble {
       width: 56px; height: 56px; border-radius: 50%;
-      background: #6366f1; border: none; cursor: pointer;
+      background: ${config.color}; border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       color: white; font-size: 24px;
     }
-    #bubble:hover { background: #4f46e5; }
+    #bubble:hover { filter: brightness(0.9); }
 
     #chat-panel {
       display: none;
@@ -55,15 +58,15 @@ export function buildWidget(): WidgetElements {
   return { shadow, panel }
 }
 
-export function buildPanel(panel: HTMLElement, shadow: ShadowRoot): void {
+export function buildPanel(panel: HTMLElement, shadow: ShadowRoot, config: WidgetConfig): void {
   panel.innerHTML = `
     <div id="header">
-      <span id="bot-name">Assistant</span>
+      <span id="bot-name">${config.bot_name}</span>
       <button id="close-btn" aria-label="Close">X</button>
     </div>
     <div id="messages"></div>
     <div id="input-row">
-      <input id="question-input" type="text" placeholder="Ask me anything..." />
+      <input id="question-input" type="text" placeholder="${config.placeholder}" />
       <button id="send-btn">Send</button>
     </div>
   `
@@ -90,7 +93,7 @@ export function buildPanel(panel: HTMLElement, shadow: ShadowRoot): void {
     }
 
     .msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.5; }
-    .msg.user { align-self: flex-end; background: #6366f1; color: white; border-bottom-right-radius: 4px; }
+    .msg.user { align-self: flex-end; background: var(--widget-color); color: white; border-bottom-right-radius: 4px; }
     .msg.bot  { align-self: flex-start; background: #f3f4f6; color: #111827; border-bottom-left-radius: 4px; }
     .msg.bot.loading { color: #9ca3af; font-style: italic; }
 
@@ -110,9 +113,9 @@ export function buildPanel(panel: HTMLElement, shadow: ShadowRoot): void {
       flex: 1; padding: 8px 12px; border: 1px solid #d1d5db;
       border-radius: 8px; font-size: 14px; outline: none;
     }
-    #question-input:focus { border-color: #6366f1; }
+    #question-input:focus { border-color: var(--widget-color); }
     #send-btn {
-      padding: 8px 14px; background: #6366f1; color: white;
+      padding: 8px 14px; background: var(--widget-color); color: white;
       border: none; border-radius: 8px; cursor: pointer; font-size: 16px;
     }
     #send-btn:disabled { background: #c7d2fe; cursor: not-allowed; }
