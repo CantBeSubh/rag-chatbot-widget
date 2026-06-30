@@ -4,7 +4,7 @@ import type React from "react"
 import { useRef } from "react"
 import Link from "next/link"
 
-import { SignInButton, SignUpButton, useAuth } from "@clerk/nextjs"
+import { SignInButton, useAuth } from "@clerk/nextjs"
 import { MeshGradient, PulsingBorder } from "@paper-design/shaders-react"
 import { motion } from "framer-motion"
 
@@ -48,12 +48,12 @@ export function ShaderBackground({ children }: ShaderBackgroundProps) {
       {/* Background Shaders */}
       <MeshGradient
         className="absolute inset-0 w-full h-full"
-        colors={["#000000", "#8B4513", "#ffffff", "#3E2723", "#5D4037"]}
+        colors={["#0d0b09", "#1c1a12", "#a89f88", "#2c2819", "#3a3523"]}
         speed={0.3}
       />
       <MeshGradient
         className="absolute inset-0 w-full h-full opacity-60"
-        colors={["#000000", "#ffffff", "#8B4513", "#000000"]}
+        colors={["#0d0b09", "#a89f88", "#4f46e5", "#0d0b09"]}
         speed={0.2}
       />
 
@@ -107,8 +107,6 @@ export function PulsingCircle() {
 }
 
 export function HeroContent() {
-  const { isLoaded, isSignedIn } = useAuth()
-
   return (
     <main className="absolute bottom-8 left-8 z-20 max-w-lg">
       <div className="text-left">
@@ -117,38 +115,34 @@ export function HeroContent() {
           style={{ filter: "url(#glass-effect)" }}
         >
           <div className="absolute top-0 left-1 right-1 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full" />
-          <span className="text-white/90 text-xs font-light relative z-10">✨ Powered by Wizz AI</span>
+          <span className="text-white/90 text-xs font-light tracking-widest relative z-10">RAG INFRASTRUCTURE · MANAGED · WIZZ</span>
         </div>
 
-        <h1 className="text-5xl md:text-6xl md:leading-16 tracking-tight font-light text-white mb-4">
-          <span className="font-medium italic font-serif">Intelligent</span> Chat
-          <br />
-          <span className="font-light tracking-tight text-white">For Your Data</span>
+        <h1 className="text-5xl md:text-5xl md:leading-16 tracking-tight font-light text-white mb-4">
+          Your knowledge
+          <span className="font-bold italic font-serif"> base.</span>{" "}
+          <span className="font-light text-indigo-300">Production ready.</span>
         </h1>
 
         <p className="text-xs font-light text-white/70 mb-4 leading-relaxed">
-          Deploy AI-powered chatbots trained on your own sources. Connect documents, configure your model, and go live in minutes.
+          Wizz Admin manages the documents, URLs, and configuration behind your AI chatbot. Add sources, review logs, and tune responses, all from one dashboard.
         </p>
 
-        <div className="flex items-center gap-4 flex-wrap">
-          <button className="px-8 py-3 rounded-full bg-transparent border border-white/30 text-white font-normal text-xs transition-all duration-200 hover:bg-white/10 hover:border-white/50 cursor-pointer">
-            Learn More
-          </button>
-          {isLoaded && isSignedIn ? (
-            <Link
-              href="/dashboard/sources"
-              className="px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90"
-            >
-              Go to Dashboard
-            </Link>
-          ) : (
-            <SignUpButton>
-              <button className="px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90 cursor-pointer">
-                Get Started
-              </button>
-            </SignUpButton>
-          )}
-        </div>
+        {/* <div className="flex items-center gap-4 flex-wrap"> */}
+        {/*   <Link */}
+        {/*     href="/dashboard/sources" */}
+        {/*     className="px-8 py-3 rounded-full bg-white text-black font-normal text-xs transition-all duration-200 hover:bg-white/90" */}
+        {/*   > */}
+        {/*     Open Dashboard → */}
+        {/*   </Link> */}
+        {/*   {isLoaded && !isSignedIn && ( */}
+        {/*     <SignInButton> */}
+        {/*       <button className="px-8 py-3 rounded-full bg-transparent border border-white/30 text-white font-normal text-xs transition-all duration-200 hover:bg-white/10 hover:border-white/50 cursor-pointer"> */}
+        {/*         Sign in */}
+        {/*       </button> */}
+        {/*     </SignInButton> */}
+        {/*   )} */}
+        {/* </div> */}
       </div>
     </main>
   )
@@ -167,13 +161,13 @@ export function Header() {
       {/* Navigation */}
       <nav className="flex items-center space-x-2">
         <a
-          href="#"
+          href="#features"
           className="text-white/80 hover:text-white text-xs font-light px-3 py-2 rounded-full hover:bg-white/10 transition-all duration-200"
         >
           Features
         </a>
         <a
-          href="#"
+          href="#pricing"
           className="text-white/80 hover:text-white text-xs font-light px-3 py-2 rounded-full hover:bg-white/10 transition-all duration-200"
         >
           Pricing
@@ -190,9 +184,9 @@ export function Header() {
       {isLoaded && isSignedIn ? (
         <Link
           href="/dashboard/sources"
-          className="px-6 py-2 rounded-full bg-white text-black font-normal text-xs transition-all duration-300 hover:bg-white/90 h-8 flex items-center"
+          className="px-4 py-2 rounded-full bg-white text-black font-normal text-xs transition-all duration-300 hover:bg-white/90 h-8 flex items-center"
         >
-          Dashboard →
+          Dashboard
         </Link>
       ) : (
         <div id="gooey-btn" className="relative flex items-center group" style={{ filter: "url(#gooey-filter)" }}>
@@ -202,7 +196,7 @@ export function Header() {
             </svg>
           </button>
           <SignInButton>
-            <button className="px-6 py-2 rounded-full bg-white text-black font-normal text-xs transition-all duration-300 hover:bg-white/90 cursor-pointer h-8 flex items-center z-10">
+            <button className="px-4 py-2 rounded-full bg-white text-black font-normal text-xs transition-all duration-300 hover:bg-white/90 cursor-pointer h-8 flex items-center z-10">
               Sign In
             </button>
           </SignInButton>
