@@ -38,6 +38,7 @@ function buildPreviewUrl(config: Partial<WidgetConfig>): string {
   url.searchParams.set("mode", "preview")
   if (config.bot_name) url.searchParams.set("botName", config.bot_name)
   if (config.color) url.searchParams.set("color", config.color)
+  if (config.background_color) url.searchParams.set("backgroundColor", config.background_color)
   if (config.placeholder) url.searchParams.set("placeholder", config.placeholder)
   return url.toString()
 }

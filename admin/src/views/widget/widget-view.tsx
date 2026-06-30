@@ -2,6 +2,8 @@
 
 import { LucideX } from "lucide-react"
 
+import { widgetPalette } from "@/lib/widget-palette"
+
 import { ChatInput } from "./components/chat-input"
 import { MessageList } from "./components/message-list"
 import type { ChatMessage } from "./hooks/useStreamingChat"
@@ -12,6 +14,7 @@ interface WidgetViewProps {
   backendUrl: string
   botName: string
   color?: string
+  backgroundColor?: string
   isPreview?: boolean
 }
 
@@ -39,7 +42,7 @@ const PREVIEW_MESSAGES: ChatMessage[] = [
   },
 ]
 
-export function WidgetView({ apiKey, backendUrl, botName, color, isPreview }: WidgetViewProps) {
+export function WidgetView({ apiKey, backendUrl, botName, color, backgroundColor, isPreview }: WidgetViewProps) {
   const chat = useStreamingChat(isPreview ? "" : apiKey, isPreview ? "" : backendUrl)
   const messages = isPreview ? PREVIEW_MESSAGES : chat.messages
   const isStreaming = isPreview ? false : chat.isStreaming
@@ -49,8 +52,10 @@ export function WidgetView({ apiKey, backendUrl, botName, color, isPreview }: Wi
     window.parent.postMessage({ type: "close" }, "*")
   }
 
-  // Inject tenant brand color as --primary CSS variable so shadcn bg-primary reflects it
-  const colorStyle = color ? ({ "--primary": color } as React.CSSProperties) : undefined
+  const colorStyle =
+    color || backgroundColor
+      ? (widgetPalette(color ?? "#6366f1", backgroundColor) as React.CSSProperties)
+      : undefined
 
   return (
     <div

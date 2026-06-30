@@ -18,6 +18,7 @@ export function useConfigPage(): UseConfigPageReturn {
     defaultValues: {
       bot_name: "",
       color: "#6366f1",
+      background_color: "#ffffff",
       placeholder: "",
       allowed_domains: [],
     },
@@ -44,6 +45,7 @@ export function useConfigPage(): UseConfigPageReturn {
   const preview: Partial<WidgetConfig> = {
     bot_name: watchedValues.bot_name,
     color: watchedValues.color,
+    background_color: watchedValues.background_color,
     placeholder: watchedValues.placeholder,
     allowed_domains: watchedValues.allowed_domains,
   }
