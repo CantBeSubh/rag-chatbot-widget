@@ -58,7 +58,9 @@ async def chat_stream(
         sources: list[dict] = []
         latency_ms = 0
 
-        async for event in answer_stream(body.question, collection_name, llm_config=llm_config):
+        async for event in answer_stream(
+            body.question, collection_name, llm_config=llm_config
+        ):
             payload = json.loads(event["data"])
             if payload["type"] == "done":
                 answer_text = payload["answer"]

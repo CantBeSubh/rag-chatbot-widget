@@ -29,8 +29,8 @@ else:
 
 _DEFAULT_INSTRUCTIONS = (
     "You are a helpful assistant. Answer the user's question using ONLY the context "
-    'provided below. If the answer is not in the context, say "I don\'t have information '
-    'about that in my knowledge base."\n\n'
+    "provided below. If the answer is not in the context, say "
+    '"I don\'t have information about that in my knowledge base."\n\n'
     "Do not make up information. Always be concise and direct."
 )
 _DEFAULT_TEMPERATURE = 0.1
@@ -38,7 +38,8 @@ _DEFAULT_MAX_TOKENS = 1024
 
 
 def _text(chunk) -> str:
-    """Normalize LLM output: OllamaLLM yields plain strings, ChatHuggingFace yields message objects."""
+    """Normalize LLM output across providers: OllamaLLM yields strings,
+    ChatHuggingFace yields message objects with a `.content` attribute."""
     return chunk.content if hasattr(chunk, "content") else chunk
 
 

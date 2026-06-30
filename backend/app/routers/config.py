@@ -7,8 +7,8 @@ from ..dependencies import get_current_tenant_id
 
 _DEFAULT_INSTRUCTIONS = (
     "You are a helpful assistant. Answer the user's question using ONLY the context "
-    'provided below. If the answer is not in the context, say "I don\'t have information '
-    'about that in my knowledge base."\n\n'
+    "provided below. If the answer is not in the context, say "
+    '"I don\'t have information about that in my knowledge base."\n\n'
     "Do not make up information. Always be concise and direct."
 )
 
