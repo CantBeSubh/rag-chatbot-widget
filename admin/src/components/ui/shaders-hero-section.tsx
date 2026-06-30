@@ -155,13 +155,13 @@ export function Header() {
     <header className="relative z-20 flex items-center justify-between p-6">
       {/* Wizz wordmark */}
       <div className="flex items-center">
-        <span className="text-white text-xl font-bold tracking-tight select-none">Wizz AI</span>
+        <Link href="/" className="text-white text-xl font-bold tracking-tight select-none">Wizz AI</Link>
       </div>
 
       {/* Navigation */}
       <nav className="flex items-center space-x-2">
         <Link
-          href="/pricing#features"
+          href="/features"
           className="text-white/80 hover:text-white text-xs font-light px-3 py-2 rounded-full hover:bg-white/10 transition-all duration-200"
         >
           Features
@@ -172,12 +172,6 @@ export function Header() {
         >
           Pricing
         </Link>
-        <a
-          href="#"
-          className="text-white/80 hover:text-white text-xs font-light px-3 py-2 rounded-full hover:bg-white/10 transition-all duration-200"
-        >
-          Docs
-        </a>
       </nav>
 
       {/* Auth CTA */}
