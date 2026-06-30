@@ -5,6 +5,7 @@ const BACKEND_URL = process.env.PUBLIC_BACKEND_URL
 export interface WidgetConfig {
   bot_name: string
   color: string
+  background_color: string
   placeholder: string
   allowed_domains: string[]
 }
