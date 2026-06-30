@@ -22,6 +22,7 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str = ""
     ENVIRONMENT: str = "development"
+    SENTRY_DSN: str = ""
 
 
 settings = Settings()

@@ -1,18 +1,33 @@
-import logging
-
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sentry_sdk.integrations.celery import CeleryIntegration
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from .core.config import settings
 from .core.database import supabase
 from .core.limiter import limiter
-from .core.logging import setup_logging
-from .routers import chat, config, ingest, logs, sources, tenant
+from .core.logging import configure_logging, get_logger
+from .routers import chat, config, health, ingest, logs, sources, tenant
 
-setup_logging()
-logger = logging.getLogger(__name__)
+configure_logging()
+logger = get_logger()
+
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        integrations=[
+            StarletteIntegration(),
+            FastApiIntegration(),
+            CeleryIntegration(),
+        ],
+        traces_sample_rate=0.1,
+        send_default_pii=False,
+        environment=settings.ENVIRONMENT,
+    )
 
 app = FastAPI()
 
@@ -33,26 +48,15 @@ app.include_router(chat.router)
 app.include_router(sources.router)
 app.include_router(logs.router)
 app.include_router(tenant.router)
+app.include_router(health.router)
 
 
 @app.on_event("startup")
 async def verify_db():
-    result = (
-        supabase.schema(settings.SUPABASE_SCHEMA)
-        .table("tenants")
-        .select("id")
-        .limit(1)
-        .execute()
-    )
-    logger.info(f"Supabase connected to {settings.SUPABASE_SCHEMA} schema: {result}")
+    supabase.schema(settings.SUPABASE_SCHEMA).table("tenants").select("id").limit(1).execute()
+    logger.info("db_connected", schema=settings.SUPABASE_SCHEMA)
 
 
 @app.get("/")
 async def root():
     return {"message": "RAG Chatbot Widget API"}
-
-
-@app.get("/health")
-@limiter.exempt
-async def health():
-    return {"status": "ok"}

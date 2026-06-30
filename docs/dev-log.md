@@ -1,5 +1,39 @@
 # Dev Log
 
+## 2026-06-29 — CAN-49: Task 2 — Sentry error tracking integration
+
+### Context
+
+Task 2 of the CAN-49 observability upgrade adds Sentry error tracking to the
+FastAPI backend, following Task 1 (structlog JSON logging). Sentry will capture
+unhandled exceptions and performance traces in production deployments.
+
+### Implementation
+
+- Added `SENTRY_DSN` config field (empty by default, no-op in local dev)
+- Initialized Sentry in `main.py` after `configure_logging()`, before app
+  creation, with FastAPI + Starlette + Celery integrations
+- Configured `traces_sample_rate=0.1` (10% of requests sampled for performance
+  monitoring), `send_default_pii=False` for privacy, and environment tracking
+
+### Manual verification steps (post-deploy to Railway)
+
+1. Set `SENTRY_DSN` in Railway env vars (from sentry.io project settings)
+2. Add a temporary route `GET /sentry-test` that raises `ValueError("test
+   error")`
+3. Deploy and hit the endpoint
+4. Confirm the error appears in the Sentry dashboard
+5. Remove the test route before merging
+
+### State at end of session
+
+- `app/core/config.py`: added `SENTRY_DSN: str = ""`
+- `app/main.py`: added `sentry_sdk` import + init block (guarded by
+  `if settings.SENTRY_DSN`)
+- `pyproject.toml`/`uv.lock`: `sentry-sdk==2.63.0` (with fastapi extra)
+- Verified: `uv run python -c "import app.main"` succeeds with no errors
+- Lint: `ruff check app/` clean
+
 ## 2026-06-24 — Backend config/database wiring + Supabase schema setup
 
 ### Context

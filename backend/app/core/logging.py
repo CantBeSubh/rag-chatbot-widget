@@ -1,22 +1,43 @@
 import logging
+import sys
 
-from uvicorn.logging import DefaultFormatter
-
-FILENAME_WIDTH = 17
-
-
-class _FileNameFormatter(DefaultFormatter):
-    def formatMessage(self, record: logging.LogRecord) -> str:
-        record.filename_field = f"{record.filename}:".ljust(FILENAME_WIDTH)
-        return super().formatMessage(record)
+import structlog
 
 
-def setup_logging(level: int = logging.INFO) -> None:
-    handler = logging.StreamHandler()
+def configure_logging() -> None:
+    shared_processors: list = [
+        structlog.stdlib.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso", key="timestamp"),
+        structlog.processors.ExceptionRenderer(),
+    ]
+
+    structlog.configure(
+        processors=[
+            *shared_processors,
+            structlog.processors.JSONRenderer(),
+        ],
+        wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
+        context_class=dict,
+        logger_factory=structlog.PrintLoggerFactory(file=sys.stdout),
+        cache_logger_on_first_use=True,
+    )
+
+    # Route stdlib logging (uvicorn, Celery, third-party) through JSON pipeline
+    handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(
-        _FileNameFormatter(
-            fmt="%(asctime)s %(levelprefix)s %(filename_field)s %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
+        structlog.stdlib.ProcessorFormatter(
+            processor=structlog.processors.JSONRenderer(),
+            foreign_pre_chain=[
+                structlog.stdlib.add_log_level,
+                structlog.processors.TimeStamper(fmt="iso", key="timestamp"),
+                structlog.processors.ExceptionRenderer(),
+            ],
         )
     )
-    logging.basicConfig(level=level, handlers=[handler])
+    root = logging.getLogger()
+    root.addHandler(handler)
+    root.setLevel(logging.INFO)
+
+
+def get_logger() -> structlog.BoundLogger:
+    return structlog.get_logger()

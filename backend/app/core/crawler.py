@@ -1,12 +1,13 @@
 import asyncio
-import logging
 import re
 from urllib.parse import urljoin, urlparse
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CacheMode, CrawlerRunConfig
 from crawl4ai.markdown_generation_strategy import DefaultMarkdownGenerator
 
-logger = logging.getLogger(__name__)
+from .logging import get_logger
+
+logger = get_logger()
 
 MAX_PAGES = 50  # Hard cap — protects against enormous sites
 
@@ -85,7 +86,7 @@ async def crawl_site(start_url: str, max_pages: int = MAX_PAGES) -> list[dict]:
                         to_visit.append(full_url)
 
             except Exception as e:
-                logger.warning("Failed to crawl %s: %s", url, e)
+                logger.warning("page_crawl_failed", url=url, error=str(e))
                 continue
 
     return results
