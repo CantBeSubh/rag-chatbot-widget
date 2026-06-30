@@ -23,8 +23,10 @@ export default function PricingPage() {
           colors={["hsl(244, 74%, 45%)", "hsl(38, 14%, 40%)", "hsl(258, 55%, 35%)"]}
         />
       </div>
+      {/* <div className="backdrop-blur-3xl border border-red-500 size-fit mx-auto"> */}
       <FeaturesSection />
       <PricingSection />
+      {/* </div> */}
     </div>
   )
 }

@@ -16,17 +16,17 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://admin.wizz.subhranshu.com"),
+  metadataBase: new URL("https://wizz.subhranshu.com"),
   title: {
-    default: "Wizz Admin",
-    template: "%s | Wizz Admin",
+    default: "Wizz AI",
+    template: "%s | Wizz AI",
   },
   description: "Manage your Wizz RAG chatbot — sources, logs, and configuration.",
   openGraph: {
-    title: "Wizz Admin",
+    title: "Wizz AI",
     description: "Manage your Wizz RAG chatbot — sources, logs, and configuration.",
-    url: "https://admin.wizz.subhranshu.com",
-    siteName: "Wizz Admin",
+    url: "https://wizz.subhranshu.com",
+    siteName: "Wizz AI",
     locale: "en_US",
     type: "website",
   },
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     },
   },
   twitter: {
-    title: "Wizz Admin",
+    title: "Wizz AI",
     card: "summary",
   },
 }

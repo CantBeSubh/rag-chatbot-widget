@@ -125,7 +125,7 @@ export function HeroContent() {
         </h1>
 
         <p className="text-xs font-light text-white/70 mb-4 leading-relaxed">
-          Wizz Admin manages the documents, URLs, and configuration behind your AI chatbot. Add sources, review logs, and tune responses, all from one dashboard.
+          Wizz AI manages the documents, URLs, and configuration behind your AI chatbot. Add sources, review logs, and tune responses, all from one dashboard.
         </p>
 
         {/* <div className="flex items-center gap-4 flex-wrap"> */}
@@ -155,7 +155,7 @@ export function Header() {
     <header className="relative z-20 flex items-center justify-between p-6">
       {/* Wizz wordmark */}
       <div className="flex items-center">
-        <span className="text-white text-xl font-bold tracking-tight select-none">Wizz</span>
+        <span className="text-white text-xl font-bold tracking-tight select-none">Wizz AI</span>
       </div>
 
       {/* Navigation */}
