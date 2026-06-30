@@ -35,7 +35,7 @@ def test_tenant():
         .insert({"user_id": str(uuid.uuid4())})
         .execute()
         .data[0]
-    )  # noqa: E501
+    )
     yield tenant
     _SCHEMA.table("chunk_hashes").delete().eq("tenant_id", tenant["id"]).execute()
     _SCHEMA.table("sources").delete().eq("tenant_id", tenant["id"]).execute()

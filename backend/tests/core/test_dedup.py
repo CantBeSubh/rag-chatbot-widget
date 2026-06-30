@@ -16,7 +16,7 @@ def tenant_and_source():
         .insert({"user_id": str(uuid.uuid4())})
         .execute()
         .data[0]
-    )  # noqa: E501
+    )
     source = (
         _SCHEMA.table("sources")
         .insert(
