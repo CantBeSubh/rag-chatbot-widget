@@ -2,7 +2,7 @@
 
 import { Controller } from "react-hook-form"
 
-import { Loader2, Monitor, Palette, Settings2, ShieldCheck } from "lucide-react"
+import { Bot, Loader2, Monitor, Palette, Settings2, ShieldCheck } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Textarea } from "@/components/ui/textarea"
 import { widgetPalette } from "@/lib/widget-palette"
 import { WidgetPreview } from "@/views/dashboard/config/_components/widget-preview"
 
@@ -258,6 +259,67 @@ export function ConfigView() {
                     </Field>
                   )}
                 />
+              </FieldGroup>
+            </CardContent>
+          </Card>
+
+          {/* LLM Settings */}
+          <Card>
+            <CardHeader className="pb-3">
+              <SectionHeader
+                icon={Bot}
+                title="LLM Settings"
+                description="Control the model's behavior when generating answers"
+              />
+            </CardHeader>
+            <CardContent>
+              <FieldGroup>
+                <Field data-invalid={!!errors.llm_config?.system_prompt}>
+                  <FieldLabel htmlFor="system_prompt">System Prompt</FieldLabel>
+                  <Textarea
+                    id="system_prompt"
+                    {...form.register("llm_config.system_prompt")}
+                    rows={5}
+                    placeholder="You are a helpful assistant..."
+                    className="resize-y"
+                  />
+                  <FieldDescription>
+                    Persona and behavior instructions. The knowledge-base context is always appended automatically.
+                  </FieldDescription>
+                  <FieldError errors={[errors.llm_config?.system_prompt]} />
+                </Field>
+
+                <Field data-invalid={!!errors.llm_config?.temperature}>
+                  <FieldLabel htmlFor="temperature">Temperature</FieldLabel>
+                  <Input
+                    id="temperature"
+                    type="number"
+                    min={0}
+                    max={2}
+                    step={0.01}
+                    {...form.register("llm_config.temperature", { valueAsNumber: true })}
+                  />
+                  <FieldDescription>
+                    Controls randomness — 0 is deterministic, higher values are more creative (max 2).
+                  </FieldDescription>
+                  <FieldError errors={[errors.llm_config?.temperature]} />
+                </Field>
+
+                <Field data-invalid={!!errors.llm_config?.max_tokens}>
+                  <FieldLabel htmlFor="max_tokens">Max Tokens</FieldLabel>
+                  <Input
+                    id="max_tokens"
+                    type="number"
+                    min={64}
+                    max={8192}
+                    step={1}
+                    {...form.register("llm_config.max_tokens", { valueAsNumber: true })}
+                  />
+                  <FieldDescription>
+                    Maximum number of tokens the model may generate per response (64–8192).
+                  </FieldDescription>
+                  <FieldError errors={[errors.llm_config?.max_tokens]} />
+                </Field>
               </FieldGroup>
             </CardContent>
           </Card>
