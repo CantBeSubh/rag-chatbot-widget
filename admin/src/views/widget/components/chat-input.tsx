@@ -10,9 +10,10 @@ import { Textarea } from "@/components/ui/textarea"
 interface ChatInputProps {
   isStreaming: boolean
   onSend: (question: string) => void
+  disabled?: boolean
 }
 
-export function ChatInput({ isStreaming, onSend }: ChatInputProps) {
+export function ChatInput({ isStreaming, onSend, disabled }: ChatInputProps) {
   const [value, setValue] = useState("")
   const ref = useRef<HTMLTextAreaElement>(null)
 
@@ -39,12 +40,12 @@ export function ChatInput({ isStreaming, onSend }: ChatInputProps) {
         placeholder="Ask a question…"
         className="min-h-[40px] max-h-[120px] resize-none"
         rows={1}
-        disabled={isStreaming}
+        disabled={isStreaming || disabled}
       />
       <Button
         size="icon"
         onClick={handleSend}
-        disabled={isStreaming || !value.trim()}
+        disabled={isStreaming || !value.trim() || disabled}
         aria-label="Send"
       >
         <SendHorizonal />

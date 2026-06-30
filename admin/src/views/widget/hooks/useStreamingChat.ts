@@ -4,6 +4,7 @@ import { useState } from "react"
 
 export interface Source {
   filename?: string
+  url?: string
 }
 
 export interface ChatMessage {
