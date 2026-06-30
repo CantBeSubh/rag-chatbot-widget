@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
+import toast from "react-hot-toast"
 
 import { zodResolver } from "@hookform/resolvers/zod"
 
@@ -42,6 +43,7 @@ export function useConfigPage(): UseConfigPageReturn {
         form.reset(config)
       } catch (error) {
         console.error("Failed to load config:", error)
+        toast.error("Failed to load configuration")
       } finally {
         setIsLoading(false)
       }
@@ -78,8 +80,10 @@ export function useConfigPage(): UseConfigPageReturn {
     setSaving(true)
     try {
       await updateConfig(data)
+      toast.success("Configuration saved")
     } catch (error) {
       console.error("Failed to save config:", error)
+      toast.error("Failed to save configuration")
     } finally {
       setSaving(false)
     }

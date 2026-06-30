@@ -1,4 +1,5 @@
 import { useRef, useState } from "react"
+import toast from "react-hot-toast"
 
 import { useMutation } from "@tanstack/react-query"
 
@@ -22,8 +23,10 @@ export function useUploadFileDialog({ onSuccess }: UploadFileDialogProps) {
     onSuccess: () => {
       setOpen(false)
       setFile(null)
+      toast.success("File queued for ingestion")
       onSuccess()
     },
+    onError: () => toast.error("Failed to upload file"),
   })
 
   function handleDrop(e: React.DragEvent) {

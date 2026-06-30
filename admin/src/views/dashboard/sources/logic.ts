@@ -1,3 +1,5 @@
+import toast from "react-hot-toast"
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { deleteSource, getSources } from "@/server/sources"
@@ -20,7 +22,11 @@ export function useSourcesPage() {
   const deleteMutation = useMutation({
     mutationKey: ["source", "delete"],
     mutationFn: deleteSource,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["sources"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sources"] })
+      toast.success("Source deleted")
+    },
+    onError: () => toast.error("Failed to delete source"),
   })
 
   function handleDelete(id: string) {

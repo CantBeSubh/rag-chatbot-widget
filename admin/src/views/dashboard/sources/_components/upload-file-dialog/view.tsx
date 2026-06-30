@@ -38,9 +38,8 @@ export function UploadFileDialog(props: UploadFileDialogProps) {
         </DialogHeader>
         <div className="space-y-4">
           <div
-            className={`flex flex-col items-center justify-center rounded-md border-2 border-dashed p-10 text-center cursor-pointer transition-colors ${
-              dragging ? "border-primary bg-primary/5" : "border-muted-foreground/30"
-            }`}
+            className={`flex flex-col items-center justify-center rounded-md border-2 border-dashed p-10 text-center cursor-pointer transition-colors ${dragging ? "border-primary bg-primary/5" : "border-muted-foreground/30"
+              }`}
             onClick={() => inputRef.current?.click()}
             onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
             onDragLeave={() => setDragging(false)}
@@ -53,7 +52,7 @@ export function UploadFileDialog(props: UploadFileDialogProps) {
               <p className="text-sm text-muted-foreground">
                 Drop a file here or click to browse
                 <br />
-                <span className="text-xs">PDF, DOCX, TXT, MD</span>
+                <span className="text-xs">PDF, TXT, MD</span>
               </p>
             )}
             <input

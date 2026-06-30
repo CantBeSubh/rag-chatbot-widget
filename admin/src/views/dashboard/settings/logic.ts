@@ -1,4 +1,5 @@
 import { useState } from "react"
+import toast from "react-hot-toast"
 import { useRouter } from "next/navigation"
 
 import { useUser } from "@clerk/nextjs"
@@ -18,15 +19,21 @@ export function useSettingsPage() {
   const copy = async () => {
     await navigator.clipboard.writeText(scriptTag)
     setCopied(true)
+    toast.success("Copied to clipboard")
     setTimeout(() => setCopied(false), 2000)
   }
 
   const handleDelete = async () => {
     setDeleting(true)
-    await deleteAll()
-    user?.reload()
-    router.push("/")
-    router.refresh()
+    try {
+      await deleteAll()
+      user?.reload()
+      router.push("/")
+      router.refresh()
+    } catch {
+      toast.error("Failed to delete account data")
+      setDeleting(false)
+    }
   }
 
   return {

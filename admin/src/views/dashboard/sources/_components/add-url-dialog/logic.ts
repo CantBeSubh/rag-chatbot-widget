@@ -1,4 +1,5 @@
 import { useState } from "react"
+import toast from "react-hot-toast"
 
 import { useMutation } from "@tanstack/react-query"
 
@@ -19,8 +20,10 @@ export function useAddUrlDialog({ onSuccess }: AddUrlDialogProps) {
       setOpen(false)
       setUrl("")
       setMaxPages(50)
+      toast.success("URL queued for ingestion")
       onSuccess()
     },
+    onError: () => toast.error("Failed to ingest URL"),
   })
 
   function handleSubmit(e: React.FormEvent) {
