@@ -1,5 +1,6 @@
 "use client"
 
+import type { CSSProperties } from "react"
 import { Controller } from "react-hook-form"
 
 import { Bot, Loader2, Monitor, Palette, Settings2, ShieldCheck } from "lucide-react"
@@ -371,14 +372,16 @@ function ColorChip({
   return (
     <span
       className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset"
-      style={{
-        backgroundColor: bg,
-        color: fg,
-        ringColor: border ?? "transparent",
-        borderColor: border,
-        borderWidth: border ? 1 : 0,
-        borderStyle: border ? "solid" : undefined,
-      }}
+      style={
+        {
+          backgroundColor: bg,
+          color: fg,
+          "--tw-ring-color": border ?? "transparent",
+          borderColor: border,
+          borderWidth: border ? 1 : 0,
+          borderStyle: border ? "solid" : undefined,
+        } as CSSProperties
+      }
     >
       {label}
     </span>

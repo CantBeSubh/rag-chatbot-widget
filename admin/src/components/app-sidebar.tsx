@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 
 import { useClerk, useUser } from "@clerk/nextjs"
-import { ChevronUp, Database, ExternalLink, LogOut, Moon, ScrollText, Settings, SlidersHorizontal, Sun, User } from "lucide-react"
+import { ChevronUp, Database, LogOut, Moon, ScrollText, Settings, SlidersHorizontal, Sun, User } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"

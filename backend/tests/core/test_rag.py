@@ -1,4 +1,4 @@
-from app.core.rag import _build_prompt, _DEFAULT_INSTRUCTIONS
+from app.core.rag import _DEFAULT_INSTRUCTIONS, _build_prompt
 
 
 def test_build_prompt_starts_with_instructions():
