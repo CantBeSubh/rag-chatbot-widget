@@ -76,7 +76,7 @@ export function buildWidget(config: WidgetConfig, apiKey: string): void {
   }
 
   bubble.addEventListener('click', () => {
-    iframe.classList.contains('open') ? closeWidget() : openWidget()
+    if (iframe.classList.contains('open')) { closeWidget() } else { openWidget() }
   })
 
   const widgetOrigin = new URL(WIDGET_APP_URL).origin
