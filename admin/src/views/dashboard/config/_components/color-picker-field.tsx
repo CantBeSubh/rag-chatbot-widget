@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 
 import { Input } from "@/components/ui/input"
 
@@ -24,12 +24,14 @@ export function ColorPickerField({
   onBlur,
 }: ColorPickerFieldProps) {
   const [local, setLocal] = useState(value)
+  const [prevValue, setPrevValue] = useState(value)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Sync when the form resets or an external value change comes in
-  useEffect(() => {
+  if (value !== prevValue) {
+    setPrevValue(value)
     setLocal(value)
-  }, [value])
+  }
 
   function handleChange(next: string) {
     setLocal(next)
