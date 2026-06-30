@@ -9,10 +9,14 @@ import { getConfig, updateConfig, WidgetConfig } from "@/server/config"
 
 import { ConfigFormData, schema, UseConfigPageReturn } from "./interface"
 
+const DEFAULT_SYSTEM_PROMPT =
+  "You are a helpful assistant. Answer the user's question using ONLY the context " +
+  'provided below. If the answer is not in the context, say "I don\'t have information ' +
+  'about that in my knowledge base."\n\nDo not make up information. Always be concise and direct.'
+
 export function useConfigPage(): UseConfigPageReturn {
   const [saving, setSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [loadedConfig, setLoadedConfig] = useState<WidgetConfig | null>(null)
 
   const form = useForm<ConfigFormData>({
     resolver: zodResolver(schema),
@@ -22,6 +26,11 @@ export function useConfigPage(): UseConfigPageReturn {
       background_color: "#ffffff",
       placeholder: "",
       allowed_domains: [],
+      llm_config: {
+        system_prompt: DEFAULT_SYSTEM_PROMPT,
+        temperature: 0.1,
+        max_tokens: 1024,
+      },
     },
   })
 
@@ -30,7 +39,6 @@ export function useConfigPage(): UseConfigPageReturn {
       setIsLoading(true)
       try {
         const config = await getConfig()
-        setLoadedConfig(config)
         form.reset(config)
       } catch (error) {
         console.error("Failed to load config:", error)
@@ -69,22 +77,9 @@ export function useConfigPage(): UseConfigPageReturn {
   const onSubmit = async (data: ConfigFormData) => {
     setSaving(true)
     try {
-      const fullConfig: WidgetConfig = {
-        ...data,
-        llm_config: loadedConfig?.llm_config || {
-          system_prompt:
-            "You are a helpful assistant. Answer the user's question using ONLY the context " +
-            'provided below. If the answer is not in the context, say "I don\'t have information ' +
-            'about that in my knowledge base."\n\nDo not make up information. Always be concise and direct.',
-          temperature: 0.1,
-          max_tokens: 1024,
-        },
-      }
-      await updateConfig(fullConfig)
-      // TODO: Optionally show success toast here
+      await updateConfig(data)
     } catch (error) {
       console.error("Failed to save config:", error)
-      // TODO: Optionally show error toast here
     } finally {
       setSaving(false)
     }
