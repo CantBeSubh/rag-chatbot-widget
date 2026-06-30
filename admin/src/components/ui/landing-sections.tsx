@@ -49,7 +49,7 @@ export function FeaturesSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {features.map(({ icon: Icon, title, description }) => (
             <div key={title} className="group">
-              <div className="w-6 h-6 mb-4 text-white/30 group-hover:text-indigo-400 transition-colors duration-200">
+              <div className="w-6 h-6 mb-4 text-white/30 group-hover:text-olive-400 transition-colors duration-200">
                 <Icon className="w-full h-full" strokeWidth={1.5} />
               </div>
               <h3 className="text-sm font-medium text-white/90 mb-2">{title}</h3>
