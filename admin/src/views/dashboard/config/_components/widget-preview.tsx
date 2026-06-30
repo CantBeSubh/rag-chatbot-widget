@@ -25,8 +25,8 @@ export function WidgetPreview({ config }: WidgetPreviewProps) {
       ref={iframeRef}
       src={src}
       title="Widget preview"
-      width={300}
-      height={420}
+      width={380}
+      height={560}
       style={{ border: "none", background: "transparent", borderRadius: "12px" }}
       allowTransparency
     />

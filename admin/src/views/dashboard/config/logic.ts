@@ -42,11 +42,25 @@ export function useConfigPage(): UseConfigPageReturn {
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const watchedValues = form.watch()
+
+  const [debouncedBotName, setDebouncedBotName] = useState(watchedValues.bot_name)
+  const [debouncedPlaceholder, setDebouncedPlaceholder] = useState(watchedValues.placeholder)
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedBotName(watchedValues.bot_name), 400)
+    return () => clearTimeout(t)
+  }, [watchedValues.bot_name])
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedPlaceholder(watchedValues.placeholder), 400)
+    return () => clearTimeout(t)
+  }, [watchedValues.placeholder])
+
   const preview: Partial<WidgetConfig> = {
-    bot_name: watchedValues.bot_name,
+    bot_name: debouncedBotName,
     color: watchedValues.color,
     background_color: watchedValues.background_color,
-    placeholder: watchedValues.placeholder,
+    placeholder: debouncedPlaceholder,
     allowed_domains: watchedValues.allowed_domains,
   }
 
