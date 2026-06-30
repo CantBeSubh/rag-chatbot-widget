@@ -4,6 +4,8 @@ import { Loader2 } from "lucide-react"
 
 import { DataTable } from "@/components/ui/data-table"
 
+import { LatencyChart } from "./_components/latency-chart/view"
+import { ThroughputChart } from "./_components/throughput-chart/view"
 import { columns } from "./_components/columns"
 import { useLogsPage } from "./logic"
 
@@ -35,7 +37,13 @@ export function LogsView() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <DataTable columns={columns} data={logs} />
+        <>
+          <div className="grid grid-cols-2 gap-4">
+            <ThroughputChart logs={logs} />
+            <LatencyChart logs={logs} />
+          </div>
+          <DataTable columns={columns} data={logs} />
+        </>
       )}
     </div>
   )

@@ -2,10 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTheme } from "next-themes"
 
 import { useClerk, useUser } from "@clerk/nextjs"
 import { ChevronUp, Database, ExternalLink, LogOut, Moon, ScrollText, Settings, SlidersHorizontal, Sun, User } from "lucide-react"
-import { useTheme } from "next-themes"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -91,8 +91,8 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard/sources">
-                <span className="font-semibold text-base">Wizz AI</span>
+              <Link href="/" className="font-semibold text-base">
+                Wizz AI
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -113,21 +113,6 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <a href="/widget" target="_blank" rel="noopener noreferrer">
-                    <ExternalLink />
-                    <span>Widget Preview</span>
-                  </a>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

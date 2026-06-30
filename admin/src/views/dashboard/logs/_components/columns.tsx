@@ -25,10 +25,9 @@ export const columns: ColumnDef<ChatLog>[] = [
     header: "Question",
     cell: ({ getValue }) => {
       const q = getValue<string>()
-      const truncated = q.length > 80 ? q.slice(0, 80) + "…" : q
       return (
-        <span className="text-sm" title={q}>
-          {truncated}
+        <span className="text-sm truncate max-w-[200px] block" title={q}>
+          {q}
         </span>
       )
     },
@@ -38,10 +37,9 @@ export const columns: ColumnDef<ChatLog>[] = [
     header: "Answer",
     cell: ({ getValue }) => {
       const a = getValue<string>()
-      const truncated = a.length > 120 ? a.slice(0, 120) + "…" : a
       return (
-        <span className="text-sm text-muted-foreground" title={a}>
-          {truncated}
+        <span className="text-sm text-muted-foreground truncate max-w-[320px] block" title={a}>
+          {a}
         </span>
       )
     },
