@@ -4,9 +4,9 @@ import { Loader2 } from "lucide-react"
 
 import { DataTable } from "@/components/ui/data-table"
 
+import { columns } from "./_components/columns"
 import { LatencyChart } from "./_components/latency-chart/view"
 import { ThroughputChart } from "./_components/throughput-chart/view"
-import { columns } from "./_components/columns"
 import { useLogsPage } from "./logic"
 
 export function LogsView() {

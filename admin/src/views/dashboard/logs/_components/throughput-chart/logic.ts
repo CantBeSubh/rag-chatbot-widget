@@ -2,7 +2,7 @@ import { useMemo, useState } from "react"
 
 import { ChatLog } from "@/server/logs"
 
-import { TimeRange, ThroughputDataPoint } from "./interface"
+import { ThroughputDataPoint,TimeRange } from "./interface"
 
 const UNANSWERED_PHRASE = "don't have information"
 

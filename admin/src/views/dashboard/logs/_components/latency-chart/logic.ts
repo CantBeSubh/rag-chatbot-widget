@@ -2,8 +2,8 @@ import { useMemo, useState } from "react"
 
 import { ChatLog } from "@/server/logs"
 
-import { LatencyDataPoint } from "./interface"
 import { TimeRange } from "../throughput-chart/interface"
+import { LatencyDataPoint } from "./interface"
 
 function avg(values: number[]): number | null {
   if (!values.length) return null
