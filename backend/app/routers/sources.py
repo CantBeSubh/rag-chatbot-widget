@@ -11,7 +11,10 @@ router = APIRouter(prefix="/sources", tags=["sources"])
 
 @router.get("")
 @limiter.limit("120/minute")
-async def list_sources(request: Request, tenant_id: str = Depends(get_current_tenant_id)) -> list[dict]:
+async def list_sources(
+    request: Request,  # noqa: ARG001
+    tenant_id: str = Depends(get_current_tenant_id),
+) -> list[dict]:
     result = (
         supabase.schema(settings.SUPABASE_SCHEMA)
         .table("sources")
@@ -26,7 +29,7 @@ async def list_sources(request: Request, tenant_id: str = Depends(get_current_te
 @router.get("/{source_id}")
 @limiter.limit("120/minute")
 async def get_source(
-    request: Request,
+    request: Request,  # noqa: ARG001
     source_id: str,
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> dict:
@@ -46,7 +49,7 @@ async def get_source(
 @router.delete("/{source_id}")
 @limiter.limit("120/minute")
 async def delete_source(
-    request: Request,
+    request: Request,  # noqa: ARG001
     source_id: str,
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> dict:

@@ -25,7 +25,7 @@ class IngestURLRequest(BaseModel):
 @router.post("/file")
 @limiter.limit("10/minute")
 async def ingest_file(
-    request: Request,
+    request: Request,  # noqa: ARG001
     file: UploadFile = File(...),
     tenant_id: str = Depends(get_current_tenant_id),
 ):
@@ -90,7 +90,7 @@ async def ingest_file(
 @router.post("/url")
 @limiter.limit("10/minute")
 async def ingest_url(
-    request: Request,
+    request: Request,  # noqa: ARG001
     body: IngestURLRequest,
     tenant_id: str = Depends(get_current_tenant_id),
 ):

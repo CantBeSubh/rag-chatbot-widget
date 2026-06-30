@@ -21,7 +21,7 @@ class ChatRequest(BaseModel):
 @router.post("")
 @limiter.limit("60/minute")
 async def chat(
-    request: Request,
+    request: Request,  # noqa: ARG001
     body: ChatRequest,
     widget_config: Annotated[dict, Depends(get_widget_config)],
 ):
@@ -45,7 +45,7 @@ async def chat(
 @router.post("/stream")
 @limiter.limit("60/minute")
 async def chat_stream(
-    request: Request,
+    request: Request,  # noqa: ARG001
     body: ChatRequest,
     widget_config: Annotated[dict, Depends(get_widget_config)],
 ):

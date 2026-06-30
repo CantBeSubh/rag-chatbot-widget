@@ -22,7 +22,7 @@ test_client = TestClient(app)
 
 @pytest.fixture
 def test_tenant():
-    tenant = _SCHEMA.table("tenants").insert({"user_id": str(uuid.uuid4())}).execute().data[0]
+    tenant = _SCHEMA.table("tenants").insert({"user_id": str(uuid.uuid4())}).execute().data[0]  # noqa: E501
     yield tenant
     _SCHEMA.table("chunk_hashes").delete().eq("tenant_id", tenant["id"]).execute()
     _SCHEMA.table("sources").delete().eq("tenant_id", tenant["id"]).execute()
@@ -34,7 +34,7 @@ def test_tenant():
 
 @pytest.fixture
 def other_tenant():
-    tenant = _SCHEMA.table("tenants").insert({"user_id": str(uuid.uuid4())}).execute().data[0]
+    tenant = _SCHEMA.table("tenants").insert({"user_id": str(uuid.uuid4())}).execute().data[0]  # noqa: E501
     yield tenant
     _SCHEMA.table("sources").delete().eq("tenant_id", tenant["id"]).execute()
     _SCHEMA.table("tenants").delete().eq("id", tenant["id"]).execute()
