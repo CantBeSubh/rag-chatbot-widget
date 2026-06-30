@@ -27,22 +27,30 @@ else:
         )
     )
 
+_DEFAULT_INSTRUCTIONS = (
+    "You are a helpful assistant. Answer the user's question using ONLY the context "
+    'provided below. If the answer is not in the context, say "I don\'t have information '
+    'about that in my knowledge base."\n\n'
+    "Do not make up information. Always be concise and direct."
+)
+_DEFAULT_TEMPERATURE = 0.1
+_DEFAULT_MAX_TOKENS = 1024
+
 
 def _text(chunk) -> str:
-    """Normalize LLM output across providers: OllamaLLM yields plain strings,
-    ChatHuggingFace yields message objects with a `.content` attribute."""
+    """Normalize LLM output: OllamaLLM yields plain strings, ChatHuggingFace yields message objects."""
     return chunk.content if hasattr(chunk, "content") else chunk
 
 
-SYSTEM_PROMPT = """
-You are a helpful assistant. Answer the user's question using ONLY the context \n
-provided below.If the answer is not in the context, say "I don't have information \n
-about that in my knowledge base."
+def _bound_llm(temperature: float, max_tokens: int):
+    """Return a per-call RunnableBinding without mutating the global llm."""
+    if settings.ENVIRONMENT == "development":
+        return llm.bind(temperature=temperature, num_predict=max_tokens)
+    return llm.bind(temperature=temperature, max_new_tokens=max_tokens)
 
-Do not make up information. Always be concise and direct.
 
-Context:
-{context}"""
+def _build_prompt(instructions: str, context: str, question: str) -> str:
+    return f"{instructions}\n\nContext:\n{context}\n\nQuestion: {question}\nAnswer:"
 
 
 def build_context(retrieved_chunks: list[dict]) -> str:
@@ -72,17 +80,23 @@ def build_sources(retrieved: list[dict]) -> list[dict]:
     ]
 
 
-def answer(question: str, collection_name: str, top_k: int = 5) -> dict:
-    start = time.time()
+def answer(
+    question: str,
+    collection_name: str,
+    top_k: int = 5,
+    llm_config: dict | None = None,
+) -> dict:
+    cfg = llm_config or {}
+    instructions = cfg.get("system_prompt", _DEFAULT_INSTRUCTIONS)
+    temperature = cfg.get("temperature", _DEFAULT_TEMPERATURE)
+    max_tokens = cfg.get("max_tokens", _DEFAULT_MAX_TOKENS)
 
+    start = time.time()
     query_vector = embed([question])[0]
     retrieved = vector_search(collection_name, query_vector, top_k=top_k)
     context = build_context(retrieved)
-    prompt = (
-        SYSTEM_PROMPT.format(context=context) + f"\n\nQuestion: {question}\nAnswer:"
-    )
-    response = _text(llm.invoke(prompt))
-
+    prompt = _build_prompt(instructions, context, question)
+    response = _text(_bound_llm(temperature, max_tokens).invoke(prompt))
     latency_ms = int((time.time() - start) * 1000)
 
     return {
@@ -93,24 +107,25 @@ def answer(question: str, collection_name: str, top_k: int = 5) -> dict:
 
 
 async def answer_stream(
-    question: str, collection_name: str, top_k: int = 5
+    question: str,
+    collection_name: str,
+    top_k: int = 5,
+    llm_config: dict | None = None,
 ) -> AsyncIterator[dict]:
-    """Yield SSE events for the answer: one per token, then a final "done" event.
+    """Yield SSE events: one per token, then a final "done" event."""
+    cfg = llm_config or {}
+    instructions = cfg.get("system_prompt", _DEFAULT_INSTRUCTIONS)
+    temperature = cfg.get("temperature", _DEFAULT_TEMPERATURE)
+    max_tokens = cfg.get("max_tokens", _DEFAULT_MAX_TOKENS)
 
-    Retrieval runs up front, before any tokens are streamed. Uses `astream`
-    (not `stream`) so generation doesn't block the event loop.
-    """
     start = time.time()
-
     query_vector = embed([question])[0]
     retrieved = vector_search(collection_name, query_vector, top_k=top_k)
     context = build_context(retrieved)
-    prompt = (
-        SYSTEM_PROMPT.format(context=context) + f"\n\nQuestion: {question}\nAnswer:"
-    )
+    prompt = _build_prompt(instructions, context, question)
 
     full_answer = ""
-    async for chunk in llm.astream(prompt):
+    async for chunk in _bound_llm(temperature, max_tokens).astream(prompt):
         token = _text(chunk)
         full_answer += token
         yield {"data": json.dumps({"type": "token", "content": token})}
