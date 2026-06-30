@@ -17,7 +17,9 @@ async def health_check() -> dict:
 
     # Supabase
     try:
-        supabase.schema(settings.SUPABASE_SCHEMA).table("tenants").select("id").limit(1).execute()
+        supabase.schema(settings.SUPABASE_SCHEMA).table("tenants").select("id").limit(
+            1
+        ).execute()
         checks["supabase"] = "ok"
     except Exception as e:
         checks["supabase"] = f"error: {str(e)[:100]}"

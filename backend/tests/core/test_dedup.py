@@ -11,7 +11,12 @@ _SCHEMA = supabase.schema(settings.SUPABASE_SCHEMA)
 
 @pytest.fixture
 def tenant_and_source():
-    tenant = _SCHEMA.table("tenants").insert({"user_id": str(uuid.uuid4())}).execute().data[0]
+    tenant = (
+        _SCHEMA.table("tenants")
+        .insert({"user_id": str(uuid.uuid4())})
+        .execute()
+        .data[0]
+    )
     source = (
         _SCHEMA.table("sources")
         .insert(

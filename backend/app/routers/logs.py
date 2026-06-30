@@ -11,7 +11,7 @@ router = APIRouter(prefix="/logs", tags=["logs"])
 @router.get("")
 @limiter.limit("120/minute")
 async def get_logs(
-    request: Request,
+    request: Request,  # noqa: ARG001
     tenant_id: str = Depends(get_current_tenant_id),
     page: int = Query(1, ge=1),
     per_page: int = Query(25, ge=1, le=1000),

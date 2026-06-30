@@ -53,7 +53,9 @@ app.include_router(health.router)
 
 @app.on_event("startup")
 async def verify_db():
-    supabase.schema(settings.SUPABASE_SCHEMA).table("tenants").select("id").limit(1).execute()
+    supabase.schema(settings.SUPABASE_SCHEMA).table("tenants").select("id").limit(
+        1
+    ).execute()
     logger.info("db_connected", schema=settings.SUPABASE_SCHEMA)
 
 
