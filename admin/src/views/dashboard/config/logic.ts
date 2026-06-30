@@ -12,6 +12,7 @@ import { ConfigFormData, schema, UseConfigPageReturn } from "./interface"
 export function useConfigPage(): UseConfigPageReturn {
   const [saving, setSaving] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [loadedConfig, setLoadedConfig] = useState<WidgetConfig | null>(null)
 
   const form = useForm<ConfigFormData>({
     resolver: zodResolver(schema),
@@ -29,6 +30,7 @@ export function useConfigPage(): UseConfigPageReturn {
       setIsLoading(true)
       try {
         const config = await getConfig()
+        setLoadedConfig(config)
         form.reset(config)
       } catch (error) {
         console.error("Failed to load config:", error)
@@ -67,7 +69,18 @@ export function useConfigPage(): UseConfigPageReturn {
   const onSubmit = async (data: ConfigFormData) => {
     setSaving(true)
     try {
-      await updateConfig(data)
+      const fullConfig: WidgetConfig = {
+        ...data,
+        llm_config: loadedConfig?.llm_config || {
+          system_prompt:
+            "You are a helpful assistant. Answer the user's question using ONLY the context " +
+            'provided below. If the answer is not in the context, say "I don\'t have information ' +
+            'about that in my knowledge base."\n\nDo not make up information. Always be concise and direct.',
+          temperature: 0.1,
+          max_tokens: 1024,
+        },
+      }
+      await updateConfig(fullConfig)
       // TODO: Optionally show success toast here
     } catch (error) {
       console.error("Failed to save config:", error)
