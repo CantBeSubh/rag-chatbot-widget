@@ -4,9 +4,9 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { useClerk, useUser } from "@clerk/nextjs"
-import { ChevronUp, Database, ExternalLink, LogOut, ScrollText, Settings, SlidersHorizontal, User } from "lucide-react"
+import { ChevronUp, Database, ExternalLink, LogOut, Moon, ScrollText, Settings, SlidersHorizontal, Sun, User } from "lucide-react"
+import { useTheme } from "next-themes"
 
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
@@ -31,6 +31,7 @@ const navItems = [
 function NavUser() {
   const { user } = useUser()
   const { signOut, openUserProfile } = useClerk()
+  const { theme, setTheme } = useTheme()
 
   const initials = [user?.firstName, user?.lastName]
     .filter(Boolean)
@@ -59,8 +60,13 @@ function NavUser() {
           <DropdownMenuContent
             side="top"
             align="end"
-            className="w-[--radix-dropdown-menu-trigger-width]"
+            className="w-full"
           >
+
+            <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+              {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+              {theme === "dark" ? "Light mode" : "Dark mode"}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openUserProfile()}>
               <User className="mr-2 h-4 w-4" />
               View profile
@@ -128,9 +134,6 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="flex items-center justify-end px-2 pb-1">
-          <ThemeToggle />
-        </div>
         <NavUser />
       </SidebarFooter>
     </Sidebar>
