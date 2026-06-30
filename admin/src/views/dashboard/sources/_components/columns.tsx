@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button"
 import { Source, SourceStatus } from "@/server/sources"
 
 const STATUS_CLASS: Record<SourceStatus, string> = {
-  queued:     "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
-  crawling:   "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
+  queued: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
+  crawling: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
   processing: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-  done:       "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-  error:      "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+  done: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+  error: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
 }
 
 export function getColumns(
@@ -36,7 +36,7 @@ export function getColumns(
       accessorKey: "type",
       header: "Type",
       cell: ({ getValue }) => (
-        <Badge variant="outline" className="capitalize">
+        <Badge variant="outline" className="uppercase">
           {getValue<string>()}
         </Badge>
       ),
@@ -74,7 +74,8 @@ export function getColumns(
         <Button
           variant="ghost"
           size="icon"
-          className="text-destructive hover:text-destructive"
+          className="text-destructive hover:text-destructive disabled:opacity-40"
+          disabled={row.original.status !== "done"}
           onClick={() => onDelete(row.original.id)}
         >
           <Trash2 className="h-4 w-4" />
