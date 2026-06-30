@@ -4,10 +4,16 @@ import { auth, clerkClient } from "@clerk/nextjs/server"
 
 import { supabase } from "./supabase/db"
 
+const sleep = (ms: number): Promise<void> => {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 export async function ensureTenant() {
   // 1. Check if its an authenticated request
   // 2. Check if there's row against unique email, if exists, set metadata
   // 3. If not, continue with tenant creation, and metadata set
+
+  await sleep(5000)
   const client = await clerkClient()
   const { isAuthenticated, userId } = await auth()
 
