@@ -1,10 +1,13 @@
-import { ThemeToggle } from "@/components/theme-toggle"
+"use client"
+
+import { Header, HeroContent, PulsingCircle, ShaderBackground } from "@/components/ui/shaders-hero-section"
 
 export default function Home() {
   return (
-
-    <div>HELLO WORLD!
-      <ThemeToggle />
-    </div>
+    <ShaderBackground>
+      <Header />
+      <HeroContent />
+      <PulsingCircle />
+    </ShaderBackground>
   )
 }
