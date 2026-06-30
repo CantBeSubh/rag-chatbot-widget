@@ -76,7 +76,11 @@ export function buildWidget(config: WidgetConfig, apiKey: string): void {
   }
 
   bubble.addEventListener('click', () => {
-    if (iframe.classList.contains('open')) { closeWidget() } else { openWidget() }
+    if (iframe.classList.contains('open')) {
+      closeWidget()
+    } else {
+      openWidget()
+    }
   })
 
   const widgetOrigin = new URL(WIDGET_APP_URL).origin
@@ -85,4 +89,3 @@ export function buildWidget(config: WidgetConfig, apiKey: string): void {
     if (e.data?.type === 'close') closeWidget()
   })
 }
-
