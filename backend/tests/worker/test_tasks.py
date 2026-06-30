@@ -30,7 +30,12 @@ UNREACHABLE_URL = "https://this-does-not-exist-xyz.invalid"
 @pytest.fixture
 def test_tenant():
     celery_app.conf.update(task_always_eager=True, task_eager_propagates=True)
-    tenant = _SCHEMA.table("tenants").insert({"user_id": str(uuid.uuid4())}).execute().data[0]  # noqa: E501
+    tenant = (
+        _SCHEMA.table("tenants")
+        .insert({"user_id": str(uuid.uuid4())})
+        .execute()
+        .data[0]
+    )  # noqa: E501
     yield tenant
     _SCHEMA.table("chunk_hashes").delete().eq("tenant_id", tenant["id"]).execute()
     _SCHEMA.table("sources").delete().eq("tenant_id", tenant["id"]).execute()

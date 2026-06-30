@@ -24,18 +24,20 @@ def eager_mode():
 
 @pytest.fixture
 def source_and_tenant():
-    tenant_data = _SCHEMA.table("tenants").insert(
-        {"user_id": str(uuid.uuid4())}
-    ).execute().data
+    tenant_data = (
+        _SCHEMA.table("tenants").insert({"user_id": str(uuid.uuid4())}).execute().data
+    )
     tenant = tenant_data[0]
     source_data = (
         _SCHEMA.table("sources")
-        .insert({
-            "tenant_id": tenant["id"],
-            "type": "url",
-            "url": "https://example.com",
-            "status": "queued",
-        })
+        .insert(
+            {
+                "tenant_id": tenant["id"],
+                "type": "url",
+                "url": "https://example.com",
+                "status": "queued",
+            }
+        )
         .execute()
         .data
     )
@@ -55,19 +57,22 @@ def test_ingest_url_task_marks_error_when_all_retries_exhausted(
     original_max = ingest_url_task.max_retries
     ingest_url_task.max_retries = 0
     try:
-        with patch(
-            "app.worker.tasks.crawl_site_sync",
-            side_effect=ConnectionError("network timeout"),
-        ), pytest.raises(ConnectionError):
+        with (
+            patch(
+                "app.worker.tasks.crawl_site_sync",
+                side_effect=ConnectionError("network timeout"),
+            ),
+            pytest.raises(ConnectionError),
+        ):
             ingest_url_task.delay(
                 source["id"], tenant["id"], "https://example.com", max_pages=1
             ).get(timeout=10)
     finally:
         ingest_url_task.max_retries = original_max
 
-    source_data = _SCHEMA.table("sources").select("*").eq(
-        "id", source["id"]
-    ).execute().data
+    source_data = (
+        _SCHEMA.table("sources").select("*").eq("id", source["id"]).execute().data
+    )
     updated = source_data[0]
     assert updated["status"] == "error"
     assert "network timeout" in updated["error_message"]
