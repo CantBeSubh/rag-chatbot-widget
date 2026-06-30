@@ -1,15 +1,10 @@
 import { getApiKey } from './auth'
-import { buildWidget, buildPanel } from './ui'
-import { wireInput } from './chat'
+import { buildWidget } from './ui'
 import { fetchConfig, isDomainAllowed } from './config'
 
 declare global {
   interface Window {
-    __ragWidget?: {
-      apiKey: string
-      shadow: ShadowRoot
-      panel: HTMLElement
-    }
+    __ragWidget?: { apiKey: string }
   }
 }
 
@@ -19,10 +14,8 @@ async function init(): Promise<void> {
 
   if (!isDomainAllowed(config.allowed_domains)) return
 
-  const { shadow, panel } = buildWidget(config)
-  buildPanel(panel, shadow, config)
-  wireInput(shadow, apiKey)
-  window.__ragWidget = { apiKey, shadow, panel }
+  buildWidget(config, apiKey)
+  window.__ragWidget = { apiKey }
 }
 
 if (document.readyState === 'loading') {
