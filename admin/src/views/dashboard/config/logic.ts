@@ -11,8 +11,8 @@ import { ConfigFormData, schema, UseConfigPageReturn } from "./interface"
 
 const DEFAULT_SYSTEM_PROMPT =
   "You are a helpful assistant. Answer the user's question using ONLY the context " +
-  'provided below. If the answer is not in the context, say "I don\'t have information ' +
-  'about that in my knowledge base."\n\nDo not make up information. Always be concise and direct.'
+  "provided below. If the answer is not in the context, say \"I don't have information " +
+  "about that in my knowledge base.\"\n\nDo not make up information. Always be concise and direct."
 
 export function useConfigPage(): UseConfigPageReturn {
   const [saving, setSaving] = useState(false)
