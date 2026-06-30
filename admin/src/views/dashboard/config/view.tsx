@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import { Slider } from "@/components/ui/slider"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { widgetPalette } from "@/lib/widget-palette"
@@ -291,14 +292,25 @@ export function ConfigView() {
                 </Field>
 
                 <Field data-invalid={!!errors.llm_config?.temperature}>
-                  <FieldLabel htmlFor="temperature">Temperature</FieldLabel>
-                  <Input
-                    id="temperature"
-                    type="number"
-                    min={0}
-                    max={2}
-                    step={0.01}
-                    {...form.register("llm_config.temperature", { valueAsNumber: true })}
+                  <div className="flex items-center justify-between">
+                    <FieldLabel htmlFor="temperature">Temperature</FieldLabel>
+                    <span className="text-sm tabular-nums text-muted-foreground">
+                      {(form.watch("llm_config.temperature") ?? 0.1).toFixed(2)}
+                    </span>
+                  </div>
+                  <Controller
+                    control={form.control}
+                    name="llm_config.temperature"
+                    render={({ field }) => (
+                      <Slider
+                        id="temperature"
+                        min={0}
+                        max={2}
+                        step={0.01}
+                        value={[field.value ?? 0.1]}
+                        onValueChange={([v]) => field.onChange(v)}
+                      />
+                    )}
                   />
                   <FieldDescription>
                     Controls randomness — 0 is deterministic, higher values are more creative (max 2).
@@ -307,14 +319,25 @@ export function ConfigView() {
                 </Field>
 
                 <Field data-invalid={!!errors.llm_config?.max_tokens}>
-                  <FieldLabel htmlFor="max_tokens">Max Tokens</FieldLabel>
-                  <Input
-                    id="max_tokens"
-                    type="number"
-                    min={64}
-                    max={8192}
-                    step={1}
-                    {...form.register("llm_config.max_tokens", { valueAsNumber: true })}
+                  <div className="flex items-center justify-between">
+                    <FieldLabel htmlFor="max_tokens">Max Tokens</FieldLabel>
+                    <span className="text-sm tabular-nums text-muted-foreground">
+                      {form.watch("llm_config.max_tokens") ?? 1024}
+                    </span>
+                  </div>
+                  <Controller
+                    control={form.control}
+                    name="llm_config.max_tokens"
+                    render={({ field }) => (
+                      <Slider
+                        id="max_tokens"
+                        min={64}
+                        max={8192}
+                        step={64}
+                        value={[field.value ?? 1024]}
+                        onValueChange={([v]) => field.onChange(v)}
+                      />
+                    )}
                   />
                   <FieldDescription>
                     Maximum number of tokens the model may generate per response (64–8192).
