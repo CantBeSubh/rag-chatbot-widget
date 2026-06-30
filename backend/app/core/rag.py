@@ -23,7 +23,6 @@ else:
             task="text-generation",
             provider="auto",
             huggingfacehub_api_token=settings.HF_TOKEN,
-            max_new_tokens=1024,
         )
     )
 
@@ -47,7 +46,7 @@ def _bound_llm(temperature: float, max_tokens: int):
     """Return a per-call RunnableBinding without mutating the global llm."""
     if settings.ENVIRONMENT == "development":
         return llm.bind(temperature=temperature, num_predict=max_tokens)
-    return llm.bind(temperature=temperature, max_new_tokens=max_tokens)
+    return llm.bind(temperature=temperature, max_tokens=max_tokens)
 
 
 def _build_prompt(instructions: str, context: str, question: str) -> str:
