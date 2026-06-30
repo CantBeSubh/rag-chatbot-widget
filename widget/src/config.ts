@@ -9,23 +9,19 @@ export interface WidgetConfig {
   allowed_domains: string[]
 }
 
-const DEFAULT_CONFIG: WidgetConfig = {
-  bot_name: 'Assistant',
-  color: '#6366f1',
-  placeholder: 'Ask me anything...',
-  allowed_domains: [],
-}
-
 export async function fetchConfig(apiKey: string): Promise<WidgetConfig> {
-  try {
-    const res = await fetch(`${BACKEND_URL}/config`, {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    })
-    if (!res.ok) return DEFAULT_CONFIG
-    return { ...DEFAULT_CONFIG, ...(await res.json()) }
-  } catch {
-    return DEFAULT_CONFIG
+  const res = await fetch(`${BACKEND_URL}/config`, {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  })
+  if (res.status === 401) {
+    console.error('[RAG Widget] Invalid API key.')
+    throw new Error('[RAG Widget] Invalid API key.')
   }
+  if (!res.ok) {
+    console.error(`[RAG Widget] Failed to load config (HTTP ${res.status}).`)
+    throw new Error(`[RAG Widget] Failed to load config (HTTP ${res.status}).`)
+  }
+  return res.json() as Promise<WidgetConfig>
 }
 
 export function isDomainAllowed(allowedDomains: string[]): boolean {
