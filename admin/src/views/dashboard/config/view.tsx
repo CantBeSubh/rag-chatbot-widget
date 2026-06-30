@@ -21,9 +21,11 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { widgetPalette } from "@/lib/widget-palette"
 import { WidgetPreview } from "@/views/dashboard/config/_components/widget-preview"
 
 import { AllowedDomainsInput } from "./_components/allowed-domains-input/view"
+import { ColorPickerField } from "./_components/color-picker-field"
 import { useConfigPage } from "./logic"
 
 function ConfigSkeleton() {
@@ -104,30 +106,87 @@ export function ConfigView() {
                   name="color"
                   control={form.control}
                   render={({ field, fieldState }) => {
-                    const pickerValue = /^#[0-9a-fA-F]{6}$/.test(field.value)
-                      ? field.value
-                      : "#6366f1"
+                    const isValidHex = /^#[0-9a-fA-F]{6}$/.test(field.value)
+                    const palette = isValidHex ? widgetPalette(field.value) : null
 
                     return (
                       <Field data-invalid={!!fieldState.error}>
                         <FieldLabel htmlFor="color">Primary Color</FieldLabel>
-                        <div className="flex gap-2">
-                          <Input
-                            type="color"
-                            id="color"
-                            value={pickerValue}
-                            onChange={field.onChange}
-                            onBlur={field.onBlur}
-                            className="h-9 w-12 shrink-0 cursor-pointer p-1"
-                          />
-                          <Input
-                            value={field.value}
-                            placeholder="#6366f1"
-                            className="flex-1"
-                            onChange={(e) => field.onChange(e.target.value)}
-                            onBlur={field.onBlur}
-                          />
-                        </div>
+                        <ColorPickerField
+                          id="color"
+                          value={field.value}
+                          placeholder="#6366f1"
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                        />
+                        {palette && (
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span
+                              className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium"
+                              style={{
+                                backgroundColor: palette["--primary"],
+                                color: palette["--primary-foreground"],
+                              }}
+                            >
+                              Button / Message
+                            </span>
+                            <span
+                              className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium"
+                              style={{
+                                backgroundColor: palette["--primary"] + "1a",
+                                color: palette["--primary"],
+                              }}
+                            >
+                              Citation chip
+                            </span>
+                          </div>
+                        )}
+                        <FieldError errors={[fieldState.error]} />
+                      </Field>
+                    )
+                  }}
+                />
+
+                <Controller
+                  name="background_color"
+                  control={form.control}
+                  render={({ field, fieldState }) => {
+                    const isValidHex = /^#[0-9a-fA-F]{6}$/.test(field.value)
+                    const palette = isValidHex ? widgetPalette("#6366f1", field.value) : null
+
+                    return (
+                      <Field data-invalid={!!fieldState.error}>
+                        <FieldLabel htmlFor="background_color">Background Color</FieldLabel>
+                        <ColorPickerField
+                          id="background_color"
+                          value={field.value}
+                          placeholder="#ffffff"
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                        />
+                        {palette && (
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span
+                              className="inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-medium"
+                              style={{
+                                backgroundColor: palette["--background"],
+                                color: palette["--foreground"],
+                                borderColor: palette["--border"],
+                              }}
+                            >
+                              Panel bg
+                            </span>
+                            <span
+                              className="inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium"
+                              style={{
+                                backgroundColor: palette["--muted"],
+                                color: palette["--muted-foreground"],
+                              }}
+                            >
+                              Bot message
+                            </span>
+                          </div>
+                        )}
                         <FieldError errors={[fieldState.error]} />
                       </Field>
                     )
@@ -177,7 +236,7 @@ export function ConfigView() {
           </CardContent>
         </Card>
 
-        <Card size="sm" className="h-fit w-fit">
+        <Card size="default" className="h-fit w-fit">
           <CardHeader>
             <CardTitle>Live Preview</CardTitle>
             <CardDescription>Updates as you edit</CardDescription>

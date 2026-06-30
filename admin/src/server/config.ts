@@ -5,6 +5,7 @@ import { apiFetch } from "./base"
 export type WidgetConfig = {
   bot_name: string
   color: string
+  background_color: string
   placeholder: string
   allowed_domains: string[]
 }
@@ -21,6 +22,7 @@ export async function getConfig(): Promise<WidgetConfig> {
     return {
       bot_name: "Your Bot",
       color: "#6366f1",
+      background_color: "#ffffff",
       placeholder: "Ask me anything...",
       allowed_domains: [],
     }

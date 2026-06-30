@@ -9,6 +9,7 @@ from ..dependencies import get_current_tenant_id
 class WidgetConfig(BaseModel):
     bot_name: str
     color: str  # Hex color e.g. "#6366f1"
+    background_color: str = "#ffffff"
     placeholder: str
     allowed_domains: list[str]
 
@@ -32,6 +33,7 @@ async def get_widget_config(tenant_id: str = Depends(get_current_tenant_id)) -> 
         return {
             "bot_name": "Assistant",
             "color": "#6366f1",
+            "background_color": "#ffffff",
             "placeholder": "Ask me anything...",
             "allowed_domains": [],
         }

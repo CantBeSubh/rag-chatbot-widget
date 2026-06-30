@@ -4,14 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000} bun build src/widget.ts --outfile=dist/widget.js --minify --target=browser --env 'PUBLIC_*'",
-    "dev": "PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000} bun build src/widget.ts --outfile=dist/widget.js --watch --target=browser --env 'PUBLIC_*'",
+    "build": "PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000} PUBLIC_WIDGET_APP_URL=${PUBLIC_WIDGET_APP_URL:-http://localhost:3000} bun build src/widget.ts --outfile=dist/widget.js --minify --target=browser --env 'PUBLIC_*'",
+    "dev": "PUBLIC_BACKEND_URL=${PUBLIC_BACKEND_URL:-http://localhost:8000} PUBLIC_WIDGET_APP_URL=${PUBLIC_WIDGET_APP_URL:-http://localhost:3000} bun build src/widget.ts --outfile=dist/widget.js --watch --target=browser --env 'PUBLIC_*'",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "format": "prettier --write src",
-    "format:check": "prettier --check src"
+    "format:check": "prettier --check src",
+    "serve": "bunx serve ."
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
