@@ -7,7 +7,7 @@
 
 ## Goal
 
-Add a shadcn `Sidebar` to the admin dashboard shell. The sidebar replaces the current Clerk-header-only layout in `app/dashboard/layout.tsx`, provides navigation for all dashboard pages plus a Widget Preview link, and surfaces the `UserButton` and `ThemeToggle` in its footer.
+Add a shadcn `Sidebar` to the admin dashboard shell. The sidebar replaces the current Clerk-header-only layout in `app/dashboard/layout.tsx`, provides navigation for all dashboard pages plus a Widget Preview link, and surfaces a custom user row and `ThemeToggle` in its footer.
 
 ---
 
@@ -44,7 +44,12 @@ SidebarProvider
       SidebarGroup     → Widget Preview (new tab)
     SidebarFooter
       ThemeToggle      → existing component from src/components/theme-toggle.tsx
-      UserButton       → Clerk <UserButton /> inside a SidebarMenuItem
+      NavUser          → custom full-width SidebarMenuButton (size lg):
+                         avatar (shadcn Avatar) + name + ChevronUp icon,
+                         wrapped in DropdownMenu with:
+                           • "View profile" → clerk.openUserProfile()
+                           • "Sign out"     → clerk.signOut()
+                         Data sourced from useUser(); actions from useClerk().
   SidebarInset
     {children}         → dashboard page content
 ```
@@ -60,7 +65,8 @@ Run `bunx shadcn@latest add sidebar` from `admin/` — generates `src/components
 
 ### Create
 **`src/components/app-sidebar.tsx`** — `"use client"` component.  
-Contains the full sidebar: nav items array, `usePathname()` for active state, `SidebarHeader`/`SidebarContent`/`SidebarFooter` slots, `ThemeToggle`, and Clerk `<UserButton />`.
+Contains the full sidebar: nav items array, `usePathname()` for active state, `SidebarHeader`/`SidebarContent`/`SidebarFooter` slots, `ThemeToggle`, and the custom NavUser footer row.  
+The NavUser row uses `useUser()` for avatar URL + display name and `useClerk()` for `signOut()` and `openUserProfile()`. Clerk's `<UserButton />` component is not used. Rendered with shadcn `Avatar`, `DropdownMenu`, and `SidebarMenuButton` (size `lg`).
 
 ### Modify
 **`src/app/dashboard/layout.tsx`** — replace the current `<header>` + Clerk show/hide block with:
@@ -70,7 +76,7 @@ Contains the full sidebar: nav items array, `usePathname()` for active state, `S
   <SidebarInset>{children}</SidebarInset>
 </SidebarProvider>
 ```
-Clerk `Show` / `SignInButton` / `SignUpButton` blocks in the header are removed — auth gating is handled elsewhere (onboarding redirect) and `UserButton` moves to the sidebar footer.
+Clerk `Show` / `SignInButton` / `SignUpButton` / `UserButton` blocks in the header are removed entirely — auth gating is handled elsewhere (onboarding redirect) and the user row moves to the sidebar footer as a custom NavUser component.
 
 ---
 
@@ -81,4 +87,6 @@ Clerk `Show` / `SignInButton` / `SignUpButton` blocks in the header are removed 
 - No barrel `index.ts` in `src/components/` — import directly from the file path.
 - Widget Preview link uses `target="_blank" rel="noopener noreferrer"`.
 - The existing `ThemeToggle` component is reused as-is — no changes needed.
+- Clerk's `<UserButton />` component is not used anywhere in the dashboard after this change. `useUser()` + `useClerk()` replace it.
 - The `/widget` layout hides `body > header` via CSS; after this change there is no `<header>` element in the DOM for dashboard routes, so that CSS rule is a no-op and harmless.
+- The `shadcn add sidebar` command also installs the `Avatar` component if not already present — needed for the NavUser row.
