@@ -6,6 +6,7 @@ interface Props {
   searchParams: Promise<{
     apiKey?: string
     botName?: string
+    placeholder?: string
     color?: string
     backgroundColor?: string
     mode?: string
@@ -13,7 +14,7 @@ interface Props {
 }
 
 export default async function WidgetPage({ searchParams }: Props) {
-  const { apiKey, botName, color, backgroundColor, mode } = await searchParams
+  const { apiKey, botName, placeholder, color, backgroundColor, mode } = await searchParams
   const isPreview = mode === "preview"
 
   if (!apiKey && !isPreview) {
@@ -27,6 +28,7 @@ export default async function WidgetPage({ searchParams }: Props) {
       apiKey={apiKey ?? ""}
       backendUrl={BACKEND_URL}
       botName={botName ?? "Assistant"}
+      placeholder={placeholder}
       color={color}
       backgroundColor={backgroundColor}
       isPreview={isPreview}

@@ -49,6 +49,7 @@ export function buildWidget(config: WidgetConfig, apiKey: string): void {
   const iframeUrl = new URL(`${WIDGET_APP_URL}/widget`)
   iframeUrl.searchParams.set('apiKey', apiKey)
   iframeUrl.searchParams.set('botName', config.bot_name)
+  iframeUrl.searchParams.set('placeholder', config.placeholder)
   iframeUrl.searchParams.set('color', config.color)
   iframeUrl.searchParams.set('backgroundColor', config.background_color)
 

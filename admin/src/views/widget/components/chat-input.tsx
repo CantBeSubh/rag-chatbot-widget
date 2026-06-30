@@ -11,9 +11,10 @@ interface ChatInputProps {
   isStreaming: boolean
   onSend: (question: string) => void
   disabled?: boolean
+  placeholder?: string
 }
 
-export function ChatInput({ isStreaming, onSend, disabled }: ChatInputProps) {
+export function ChatInput({ isStreaming, onSend, disabled, placeholder = "Ask a question…" }: ChatInputProps) {
   const [value, setValue] = useState("")
   const ref = useRef<HTMLTextAreaElement>(null)
 
@@ -37,7 +38,7 @@ export function ChatInput({ isStreaming, onSend, disabled }: ChatInputProps) {
             handleSend()
           }
         }}
-        placeholder="Ask a question…"
+        placeholder={placeholder}
         className="min-h-[40px] max-h-[120px] resize-none"
         rows={1}
         disabled={isStreaming || disabled}

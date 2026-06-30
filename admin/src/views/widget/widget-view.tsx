@@ -13,6 +13,7 @@ interface WidgetViewProps {
   apiKey: string
   backendUrl: string
   botName: string
+  placeholder?: string
   color?: string
   backgroundColor?: string
   isPreview?: boolean
@@ -42,7 +43,7 @@ const PREVIEW_MESSAGES: ChatMessage[] = [
   },
 ]
 
-export function WidgetView({ apiKey, backendUrl, botName, color, backgroundColor, isPreview }: WidgetViewProps) {
+export function WidgetView({ apiKey, backendUrl, botName, placeholder, color, backgroundColor, isPreview }: WidgetViewProps) {
   const chat = useStreamingChat(isPreview ? "" : apiKey, isPreview ? "" : backendUrl)
   const messages = isPreview ? PREVIEW_MESSAGES : chat.messages
   const isStreaming = isPreview ? false : chat.isStreaming
@@ -77,7 +78,7 @@ export function WidgetView({ apiKey, backendUrl, botName, color, backgroundColor
 
       <MessageList messages={messages} />
 
-      <ChatInput isStreaming={isStreaming} onSend={sendMessage} disabled={isPreview} />
+      <ChatInput isStreaming={isStreaming} onSend={sendMessage} disabled={isPreview} placeholder={placeholder} />
     </div>
   )
 }
