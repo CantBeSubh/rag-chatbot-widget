@@ -1,11 +1,15 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
+import dayjs from "dayjs"
+import relativeTime from "dayjs/plugin/relativeTime"
 import { Trash2 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Source, SourceStatus } from "@/server/sources"
+
+dayjs.extend(relativeTime)
 
 const STATUS_CLASS: Record<SourceStatus, string> = {
   queued: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
@@ -61,12 +65,7 @@ export function getColumns(
     {
       accessorKey: "ingested_at",
       header: "Ingested",
-      cell: ({ getValue }) =>
-        new Date(getValue<string>()).toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
+      cell: ({ getValue }) => dayjs(getValue<string>()).fromNow(),
     },
     {
       id: "actions",
