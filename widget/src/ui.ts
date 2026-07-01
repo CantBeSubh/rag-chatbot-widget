@@ -54,6 +54,7 @@ export function buildWidget(config: WidgetConfig, apiKey: string): void {
   iframeUrl.searchParams.set('placeholder', config.placeholder)
   iframeUrl.searchParams.set('color', config.color)
   iframeUrl.searchParams.set('backgroundColor', config.background_color)
+  iframeUrl.searchParams.set('parentOrigin', window.location.origin)
 
   const iframe = document.createElement('iframe')
   iframe.id = 'chat-frame'

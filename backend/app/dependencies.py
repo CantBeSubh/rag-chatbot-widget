@@ -42,7 +42,14 @@ def get_widget_config(
     widget_config = config.data or {}
     allowed_domains = widget_config.get("allowed_domains", [])
     if allowed_domains:
-        origin = raw_request.headers.get("origin", "")
+        # The widget runs inside a cross-origin iframe, so the browser's
+        # `Origin` header reflects the iframe's own origin, not the origin
+        # of the page that embeds it. The embed script (which does run in
+        # the parent page) forwards the real parent origin via this header
+        # instead; fall back to `Origin` for non-iframe callers.
+        origin = raw_request.headers.get(
+            "x-widget-parent-origin"
+        ) or raw_request.headers.get("origin", "")
         origin_host = (
             origin.replace("https://", "").replace("http://", "").split(":")[0].lower()
         )

@@ -28,7 +28,7 @@ function parseSseChunk(
   return { events, remainder }
 }
 
-export function useStreamingChat(apiKey: string, backendUrl: string) {
+export function useStreamingChat(apiKey: string, backendUrl: string, parentOrigin?: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
 
@@ -54,6 +54,7 @@ export function useStreamingChat(apiKey: string, backendUrl: string) {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
+          ...(parentOrigin ? { "X-Widget-Parent-Origin": parentOrigin } : {}),
         },
         body: JSON.stringify({
           messages: [...history, { role: "user", content: question }],
@@ -95,11 +96,12 @@ export function useStreamingChat(apiKey: string, backendUrl: string) {
           }
         }
       }
-    } catch {
+    } catch (error) {
+      console.error(error)
       setMessages((prev) =>
         prev.map((m) =>
           m.id === botId
-            ? { ...m, content: "Something went wrong. Please try again.", loading: false }
+            ? { ...m, content: `Something went wrong. Please try again.\n ${error}`, loading: false }
             : m,
         ),
       )

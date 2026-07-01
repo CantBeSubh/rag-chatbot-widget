@@ -9,12 +9,13 @@ interface Props {
     placeholder?: string
     color?: string
     backgroundColor?: string
+    parentOrigin?: string
     mode?: string
   }>
 }
 
 export default async function WidgetPage({ searchParams }: Props) {
-  const { apiKey, botName, placeholder, color, backgroundColor, mode } = await searchParams
+  const { apiKey, botName, placeholder, color, backgroundColor, parentOrigin, mode } = await searchParams
   const isPreview = mode === "preview"
 
   if (!apiKey && !isPreview) {
@@ -31,6 +32,7 @@ export default async function WidgetPage({ searchParams }: Props) {
       placeholder={placeholder}
       color={color}
       backgroundColor={backgroundColor}
+      parentOrigin={parentOrigin}
       isPreview={isPreview}
     />
   )
