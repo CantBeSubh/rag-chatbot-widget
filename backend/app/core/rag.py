@@ -49,8 +49,24 @@ def _bound_llm(temperature: float, max_tokens: int):
     return llm.bind(temperature=temperature, max_tokens=max_tokens)
 
 
-def _build_prompt(instructions: str, context: str, question: str) -> str:
-    return f"{instructions}\n\nContext:\n{context}\n\nQuestion: {question}\nAnswer:"
+def _build_prompt(
+    instructions: str, context: str, question: str, history: str = ""
+) -> str:
+    history_block = f"Conversation so far:\n{history}\n\n" if history else ""
+    return (
+        f"{instructions}\n\n{history_block}Context:\n{context}\n\n"
+        f"Question: {question}\nAnswer:"
+    )
+
+
+def _format_history(messages: list[dict]) -> str:
+    """Render all but the last message as a transcript for prompt context."""
+    role_labels = {"user": "User", "assistant": "Assistant"}
+    lines = [
+        f"{role_labels.get(m['role'], m['role'])}: {m['content']}"
+        for m in messages[:-1]
+    ]
+    return "\n".join(lines)
 
 
 def build_context(retrieved_chunks: list[dict]) -> str:
@@ -81,7 +97,7 @@ def build_sources(retrieved: list[dict]) -> list[dict]:
 
 
 def answer(
-    question: str,
+    messages: list[dict],
     collection_name: str,
     top_k: int = 5,
     llm_config: dict | None = None,
@@ -90,12 +106,14 @@ def answer(
     instructions = cfg.get("system_prompt", _DEFAULT_INSTRUCTIONS)
     temperature = cfg.get("temperature", _DEFAULT_TEMPERATURE)
     max_tokens = cfg.get("max_tokens", _DEFAULT_MAX_TOKENS)
+    question = messages[-1]["content"]
+    history = _format_history(messages)
 
     start = time.time()
     query_vector = embed([question])[0]
     retrieved = vector_search(collection_name, query_vector, top_k=top_k)
     context = build_context(retrieved)
-    prompt = _build_prompt(instructions, context, question)
+    prompt = _build_prompt(instructions, context, question, history)
     response = _text(_bound_llm(temperature, max_tokens).invoke(prompt))
     latency_ms = int((time.time() - start) * 1000)
 
@@ -107,7 +125,7 @@ def answer(
 
 
 async def answer_stream(
-    question: str,
+    messages: list[dict],
     collection_name: str,
     top_k: int = 5,
     llm_config: dict | None = None,
@@ -117,12 +135,14 @@ async def answer_stream(
     instructions = cfg.get("system_prompt", _DEFAULT_INSTRUCTIONS)
     temperature = cfg.get("temperature", _DEFAULT_TEMPERATURE)
     max_tokens = cfg.get("max_tokens", _DEFAULT_MAX_TOKENS)
+    question = messages[-1]["content"]
+    history = _format_history(messages)
 
     start = time.time()
     query_vector = embed([question])[0]
     retrieved = vector_search(collection_name, query_vector, top_k=top_k)
     context = build_context(retrieved)
-    prompt = _build_prompt(instructions, context, question)
+    prompt = _build_prompt(instructions, context, question, history)
 
     full_answer = ""
     async for chunk in _bound_llm(temperature, max_tokens).astream(prompt):

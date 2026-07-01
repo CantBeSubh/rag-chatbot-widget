@@ -36,6 +36,11 @@ export function useStreamingChat(apiKey: string, backendUrl: string) {
     const userId = crypto.randomUUID()
     const botId = crypto.randomUUID()
 
+    const history = messages.map((m) => ({
+      role: m.role === "bot" ? "assistant" : "user",
+      content: m.content,
+    }))
+
     setMessages((prev) => [
       ...prev,
       { id: userId, role: "user", content: question, sources: [], loading: false },
@@ -50,7 +55,9 @@ export function useStreamingChat(apiKey: string, backendUrl: string) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({
+          messages: [...history, { role: "user", content: question }],
+        }),
       })
 
       if (!response.ok || !response.body) {

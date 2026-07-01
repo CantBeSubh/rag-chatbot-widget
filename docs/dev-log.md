@@ -1,5 +1,27 @@
 # Dev Log
 
+## 2026-07-01 — Chat endpoint accepts message history
+
+`POST /chat` and `/chat/stream` previously took a single `question: str`,
+so the LLM had no memory of earlier turns in a conversation — each request
+was answered in isolation. Changed `ChatRequest` to `messages: list[Message]`
+(`role: "user" | "assistant"`, `content: str`); the router 422s if `messages`
+is empty or doesn't end with a `user` message.
+
+`rag.answer` / `rag.answer_stream` now take `messages` instead of `question`.
+Vector retrieval still embeds only the last user message (embedding a full
+transcript would dilute the retrieval query), but `_build_prompt` gained an
+optional `history` block — all messages except the last, rendered as
+`"User: ...\nAssistant: ..."` via `_format_history` — inserted between the
+system instructions and the retrieved context so the model sees prior turns
+without them affecting what gets retrieved.
+
+Frontend (`useStreamingChat.ts`) builds the array from its existing
+`ChatMessage[]` state (mapping `role: "bot"` → `"assistant"`) and appends the
+new user turn before POSTing. `chat-input.tsx` / `widget-view.tsx` are
+unchanged — they still call `sendMessage(question: string)`; history handling
+is internal to the hook.
+
 ## 2026-06-29 — CAN-49: Task 2 — Sentry error tracking integration
 
 ### Context
