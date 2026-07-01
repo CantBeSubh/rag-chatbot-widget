@@ -4,7 +4,7 @@ import type React from "react"
 import { useRef } from "react"
 import Link from "next/link"
 
-import { SignInButton, useAuth } from "@clerk/nextjs"
+import { SignInButton, SignOutButton, useAuth } from "@clerk/nextjs"
 import { MeshGradient, PulsingBorder } from "@paper-design/shaders-react"
 import { motion } from "framer-motion"
 
@@ -176,12 +176,19 @@ export function Header() {
 
       {/* Auth CTA */}
       {isLoaded && isSignedIn ? (
-        <Link
-          href="/dashboard/sources"
-          className="px-4 py-2 rounded-full bg-white text-black font-normal text-xs transition-all duration-300 hover:bg-white/90 h-8 flex items-center"
-        >
-          Dashboard
-        </Link>
+        <div className="flex">
+          <SignOutButton>
+            <button className="px-4 py-2 rounded-full text-white font-normal text-xs transition-all duration-300 hover:underline cursor-pointer h-8 flex items-center z-10">
+              Sign out
+            </button>
+          </SignOutButton>
+          <Link
+            href="/dashboard/sources"
+            className="px-4 py-2 rounded-full bg-white text-black font-normal text-xs transition-all duration-300 hover:bg-white/90 h-8 flex items-center"
+          >
+            Dashboard
+          </Link>
+        </div>
       ) : (
         <div id="gooey-btn" className="relative flex items-center group" style={{ filter: "url(#gooey-filter)" }}>
           <button className="absolute right-0 px-2.5 py-2 rounded-full bg-white text-black font-normal text-xs transition-all duration-300 hover:bg-white/90 cursor-pointer h-8 flex items-center justify-center -translate-x-10 group-hover:-translate-x-19 z-0">
