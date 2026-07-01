@@ -1,7 +1,7 @@
 "use client"
 
 import type { CSSProperties } from "react"
-import { Controller } from "react-hook-form"
+import { Controller, useWatch } from "react-hook-form"
 
 import { Bot, Loader2, Monitor, Palette, Settings2, ShieldCheck } from "lucide-react"
 
@@ -79,6 +79,8 @@ function SectionHeader({
 export function ConfigView() {
   const { form, preview, onSubmit, saving, isLoading } = useConfigPage()
   const { errors } = form.formState
+  const temperature = useWatch({ control: form.control, name: "llm_config.temperature" })
+  const maxTokens = useWatch({ control: form.control, name: "llm_config.max_tokens" })
 
   if (isLoading) {
     return <ConfigSkeleton />
@@ -295,7 +297,7 @@ export function ConfigView() {
                   <div className="flex items-center justify-between">
                     <FieldLabel htmlFor="temperature">Temperature</FieldLabel>
                     <span className="text-sm tabular-nums text-muted-foreground">
-                      {(form.watch("llm_config.temperature") ?? 0.1).toFixed(2)}
+                      {(temperature ?? 0.1).toFixed(2)}
                     </span>
                   </div>
                   <Controller
@@ -322,7 +324,7 @@ export function ConfigView() {
                   <div className="flex items-center justify-between">
                     <FieldLabel htmlFor="max_tokens">Max Tokens</FieldLabel>
                     <span className="text-sm tabular-nums text-muted-foreground">
-                      {form.watch("llm_config.max_tokens") ?? 1024}
+                      {maxTokens ?? 1024}
                     </span>
                   </div>
                   <Controller
