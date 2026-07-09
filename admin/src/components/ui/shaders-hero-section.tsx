@@ -148,6 +148,25 @@ export function HeroContent() {
   )
 }
 
+export function VideoEmbed() {
+  return (
+    <div className="hidden md:block absolute top-1/2 right-8 z-20 w-full max-w-3xl -translate-y-1/2">
+      <div className="relative rounded-2xl bg-white/5 backdrop-blur-sm p-2 overflow-hidden">
+        <div className="relative aspect-video w-full overflow-hidden rounded-xl">
+          <iframe
+            className="absolute inset-0 h-full w-full"
+            src="https://www.youtube.com/embed/_vpb2bVNjX0?si=BlBwvR8IB09sTm_r"
+            title="YouTube video player"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerPolicy="strict-origin-when-cross-origin"
+            allowFullScreen
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function Header() {
   const { isLoaded, isSignedIn } = useAuth()
 
