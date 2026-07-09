@@ -155,7 +155,7 @@ export function VideoEmbed() {
         <div className="relative aspect-video w-full overflow-hidden rounded-xl">
           <iframe
             className="absolute inset-0 h-full w-full"
-            src="https://www.youtube.com/embed/_vpb2bVNjX0?si=BlBwvR8IB09sTm_r"
+            src="https://www.youtube.com/embed/R_P7wWuymD0?si=HaLCl6BD5b4U1SYe"
             title="YouTube video player"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             referrerPolicy="strict-origin-when-cross-origin"
