@@ -768,5 +768,8 @@ fields are already stored in Zilliz per chunk; added them to the response.
 - Empty `allowed_domains` already meant "allow all"; `"*"` makes that intent
   explicit and lets a tenant keep other entries listed while temporarily
   opening up.
-- Admin form needed no change — `allowed_domains` is `z.array(z.string())`
-  with no domain-format validation, so `*` can already be entered.
+- Admin form: the Zod schema (`z.array(z.string())`) accepts `*`, but the
+  `AllowedDomainsInput` hook has its own `DOMAIN_REGEX` client check that
+  rejected it. Added `*` as an explicit special case there (and updated the
+  error hint). Note: that regex requires a TLD, so `localhost` also fails
+  it — existing `localhost` chips predate the validation.

@@ -15,8 +15,8 @@ export function useAllowedDomainsInput({ value, onChange }: AllowedDomainsInputP
       return
     }
 
-    if (!DOMAIN_REGEX.test(inputValue)) {
-      setError("Invalid domain format (e.g., example.com)")
+    if (inputValue !== "*" && !DOMAIN_REGEX.test(inputValue)) {
+      setError("Invalid domain format (e.g., example.com or *)")
       return
     }
 
