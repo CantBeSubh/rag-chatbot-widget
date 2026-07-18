@@ -55,7 +55,7 @@ def get_widget_config(
         )
         allowed_domains = [domain.lower() for domain in allowed_domains]
 
-        if origin_host not in allowed_domains:
+        if "*" not in allowed_domains and origin_host not in allowed_domains:
             raise HTTPException(
                 status_code=403,
                 detail=f"Domain '{origin_host}' is not allowed.",

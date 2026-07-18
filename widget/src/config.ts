@@ -27,6 +27,7 @@ export async function fetchConfig(apiKey: string): Promise<WidgetConfig> {
 
 export function isDomainAllowed(allowedDomains: string[]): boolean {
   if (allowedDomains.length === 0) return true
+  if (allowedDomains.includes('*')) return true
   const hostname = window.location.hostname
   return allowedDomains.some((d) => d === hostname || hostname.endsWith(`.${d}`))
 }

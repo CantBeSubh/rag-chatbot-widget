@@ -759,3 +759,14 @@ fields are already stored in Zilliz per chunk; added them to the response.
 - Updated `AllowedDomainsInput` sub-components to use
   shadcn `Input`, `Button`, `Badge`, `Separator` instead of raw HTML + gray
   Tailwind classes.
+
+## 2026-07-18 — Wildcard "*" in allowed domains
+
+- `"*"` in `allowed_domains` now allows all domains. Enforced in both places
+  the allowlist is checked: `backend/app/dependencies.py` (origin header
+  check) and `widget/src/config.ts` `isDomainAllowed` (client-side check).
+- Empty `allowed_domains` already meant "allow all"; `"*"` makes that intent
+  explicit and lets a tenant keep other entries listed while temporarily
+  opening up.
+- Admin form needed no change — `allowed_domains` is `z.array(z.string())`
+  with no domain-format validation, so `*` can already be entered.
