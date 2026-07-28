@@ -38,6 +38,25 @@ Manual testing of the cloud path requires at least one of `GROQ_API_KEY` /
 (gitignored) `.env` — otherwise every request goes straight to Ollama since
 `_build_providers()` never adds a cloud entry to try first.
 
+Final review caught three cross-cutting issues fixed in a follow-up commit:
+each cloud `ChatOpenAI` now sets `timeout=20, max_retries=0` — without this
+the `openai` SDK silently retried a 429 internally (honoring `Retry-After`,
+sleeping up to 60s) before `RateLimitError` ever reached the fallback loop,
+and the default unbounded timeout meant a hung provider blocked the request
+forever; `POST /chat`'s handler now wraps the synchronous `answer()` call in
+`run_in_threadpool` since it can now make up to 5 sequential remote calls
+instead of 1 local one, and was blocking the FastAPI event loop for other
+requests while it ran; added tests for the full 5-provider chain order and
+the realistic "every cloud provider rate-limited, Ollama serves" case,
+neither of which the original per-task tests exercised.
+
+Known follow-ups (not done, parked as minor): `model_used` isn't persisted
+to `chat_logs` (only survives in the HTTP response), so the fallback's
+observability goal is only half-met; only `openai.RateLimitError` triggers
+fallback per the design, so a 5xx/connection/timeout error from a cloud
+provider still surfaces as a 500 with a healthy Ollama unused at the chain's
+end.
+
 ## 2026-07-01 — Chat endpoint accepts message history
 
 `POST /chat` and `/chat/stream` previously took a single `question: str`,
