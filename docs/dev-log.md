@@ -1,5 +1,43 @@
 # Dev Log
 
+## 2026-07-28 — Fallback model chain for `rag.py` (Groq → Cerebras → OpenRouter → Google AI Studio → Ollama)
+
+Replaced the single hard-coded Ollama LLM call with an ordered fallback chain.
+`_build_providers()` appends each cloud provider (as a `ChatOpenAI` pointed at
+that provider's OpenAI-compatible endpoint) only if its API key is set in
+config, then always appends `("ollama", llm)` last — with no cloud keys
+configured the chain degrades to Ollama-only, i.e. today's behavior.
+
+Two fallback loops share the same "advance only on rate limit" rule but
+differ for sync vs. streaming call sites:
+
+- `_invoke_with_fallback` (used by `answer()`): tries each provider's
+  `.invoke()` in order; a `RateLimitError` (from the `openai` SDK, since all
+  providers go through `ChatOpenAI`) moves to the next provider, any other
+  exception propagates immediately.
+- `_astream_with_fallback` (used by `answer_stream()`): same idea for
+  `.astream()`, but only falls back if the rate limit fires *before* any
+  token has been yielded for that provider. Once streaming has started for a
+  provider, a mid-stream `RateLimitError` propagates instead of restarting
+  the answer on a different model — switching providers mid-answer would
+  produce a garbled response spliced from two models.
+
+`_bind(name, model, temperature, max_tokens)` normalizes the per-call kwargs
+across providers without mutating the shared model instance: Ollama takes
+`options={"temperature": ..., "num_predict": ...}` via `.bind()`, cloud
+`ChatOpenAI` providers take `temperature=...`/`max_tokens=...` directly.
+`_text(chunk)` normalizes output shape — `OllamaLLM` yields plain strings,
+chat models yield message objects with `.content`.
+
+Both `answer()`'s return dict and `answer_stream()`'s final SSE `"done"`
+event now include `model_used: str` so callers/logs can see which provider
+actually served a given response.
+
+Manual testing of the cloud path requires at least one of `GROQ_API_KEY` /
+`CEREBRAS_API_KEY` / `OPENROUTER_API_KEY` / `GOOGLE_API_KEY` set in the real
+(gitignored) `.env` — otherwise every request goes straight to Ollama since
+`_build_providers()` never adds a cloud entry to try first.
+
 ## 2026-07-01 — Chat endpoint accepts message history
 
 `POST /chat` and `/chat/stream` previously took a single `question: str`,
