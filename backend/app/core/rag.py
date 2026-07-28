@@ -8,7 +8,7 @@ from .config import settings
 from .embedder import embed
 from .vector_store import vector_search
 
-# TODO (Task 2-4): Replace with fallback chain: Groq -> Cerebras -> OpenRouter -> Google AI Studio -> Ollama
+# TODO (Task 2-4): Replace with fallback chain (Groq, Cerebras, OpenRouter, Google)
 llm = OllamaLLM(
     model=settings.LANGCHAIN_OLLAMA_MODEL,
     temperature=0.1,
@@ -28,7 +28,7 @@ _DEFAULT_MAX_TOKENS = 1024
 
 def _text(chunk) -> str:
     """Normalize LLM output across providers: OllamaLLM yields strings,
-    ChatHuggingFace yields message objects with a `.content` attribute."""
+    chat models yield message objects with a `.content` attribute."""
     return chunk.content if hasattr(chunk, "content") else chunk
 
 
