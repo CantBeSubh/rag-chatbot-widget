@@ -153,7 +153,8 @@ def test_astream_with_fallback_propagates_rate_limit_after_first_token():
             raise self.error
 
     groq = _PartialStreamModel(error=_rate_limit_error())
-    providers = [("groq", groq)]
+    ollama = _FakeModel(response=["should", "never", "run"])
+    providers = [("groq", groq), ("ollama", ollama)]
 
     async def _collect():
         return [
