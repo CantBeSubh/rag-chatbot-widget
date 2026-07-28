@@ -1,3 +1,5 @@
+import asyncio
+
 import httpx
 import pytest
 from openai import RateLimitError
@@ -5,6 +7,7 @@ from openai import RateLimitError
 from app.core.config import settings
 from app.core.rag import (
     _DEFAULT_INSTRUCTIONS,
+    _astream_with_fallback,
     _bind,
     _build_prompt,
     _build_providers,
@@ -125,3 +128,38 @@ def test_invoke_with_fallback_propagates_non_rate_limit_error():
 
     with pytest.raises(ValueError, match="boom"):
         _invoke_with_fallback(providers, 0.1, 1024, "prompt")
+
+
+def test_astream_with_fallback_falls_back_before_first_token():
+    groq = _FakeModel(error=_rate_limit_error())
+    ollama = _FakeModel(response=["hel", "lo"])
+    providers = [("groq", groq), ("ollama", ollama)]
+
+    async def _collect():
+        return [
+            chunk
+            async for chunk in _astream_with_fallback(providers, 0.1, 1024, "prompt")
+        ]
+
+    tokens = asyncio.run(_collect())
+
+    assert tokens == [("ollama", "hel"), ("ollama", "lo")]
+
+
+def test_astream_with_fallback_propagates_rate_limit_after_first_token():
+    class _PartialStreamModel(_FakeModel):
+        async def astream(self, _prompt):
+            yield "partial"
+            raise self.error
+
+    groq = _PartialStreamModel(error=_rate_limit_error())
+    providers = [("groq", groq)]
+
+    async def _collect():
+        return [
+            chunk
+            async for chunk in _astream_with_fallback(providers, 0.1, 1024, "prompt")
+        ]
+
+    with pytest.raises(RateLimitError):
+        asyncio.run(_collect())

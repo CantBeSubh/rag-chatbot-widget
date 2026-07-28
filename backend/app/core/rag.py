@@ -117,6 +117,30 @@ def _invoke_with_fallback(
     raise last_error if last_error else RuntimeError("no LLM providers configured")
 
 
+async def _astream_with_fallback(
+    providers: list[tuple[str, Any]], temperature: float, max_tokens: int, prompt: str
+) -> AsyncIterator[tuple[str, str]]:
+    """Yield (provider_name, token) pairs. Falls back only before the first
+    token of a given provider; a rate limit after streaming has started
+    propagates instead of switching providers mid-answer."""
+    last_error: RateLimitError | None = None
+    for name, model in providers:
+        bound = _bind(name, model, temperature, max_tokens)
+        started = False
+        try:
+            async for chunk in bound.astream(prompt):
+                started = True
+                yield name, _text(chunk)
+            return
+        except RateLimitError as e:
+            if started:
+                raise
+            logger.warning("provider_rate_limited", provider=name)
+            last_error = e
+            continue
+    raise last_error if last_error else RuntimeError("no LLM providers configured")
+
+
 def _build_prompt(
     instructions: str, context: str, question: str, history: str = ""
 ) -> str:
@@ -216,8 +240,11 @@ async def answer_stream(
     prompt = _build_prompt(instructions, context, question, history)
 
     full_answer = ""
-    async for chunk in _bound_llm(temperature, max_tokens).astream(prompt):
-        token = _text(chunk)
+    model_used = ""
+    async for name, token in _astream_with_fallback(
+        _PROVIDERS, temperature, max_tokens, prompt
+    ):
+        model_used = name
         full_answer += token
         yield {"data": json.dumps({"type": "token", "content": token})}
 
@@ -229,6 +256,7 @@ async def answer_stream(
                 "answer": full_answer,
                 "sources": build_sources(retrieved),
                 "latency_ms": latency_ms,
+                "model_used": model_used,
             }
         )
     }
