@@ -23,8 +23,21 @@ llm = OllamaLLM(
 
 
 def _build_providers() -> list[tuple[str, Any]]:
-    """Ordered fallback chain: configured cloud providers, then Ollama last."""
+    """Ordered fallback chain: NVIDIA -> Groq -> Cerebras -> OpenRouter -> Google, then Ollama last."""
     providers: list[tuple[str, Any]] = []
+    if settings.NVIDIA_API_KEY:
+        providers.append(
+            (
+                "nvidia",
+                ChatOpenAI(
+                    base_url="https://integrate.api.nvidia.com/v1",
+                    api_key=settings.NVIDIA_API_KEY,
+                    model=settings.LANGCHAIN_NVIDIA_MODEL,
+                    timeout=20,
+                    max_retries=0,
+                ),
+            )
+        )
     if settings.GROQ_API_KEY:
         providers.append(
             (

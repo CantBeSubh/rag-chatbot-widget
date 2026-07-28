@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     LANGCHAIN_OLLAMA_BASE_URL: str = "http://localhost:11434"
     LANGCHAIN_OLLAMA_MODEL: str = "llama3.1:8b"
 
+    NVIDIA_API_KEY: str = ""
+    LANGCHAIN_NVIDIA_MODEL: str = "openai/gpt-oss-120b"
+
     GROQ_API_KEY: str = ""
     LANGCHAIN_GROQ_MODEL: str = "llama-3.3-70b-versatile"
 
