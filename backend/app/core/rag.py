@@ -5,6 +5,7 @@ from typing import Any
 
 from langchain_ollama import OllamaLLM
 from langchain_openai import ChatOpenAI
+from openai import RateLimitError
 
 from .config import settings
 from .embedder import embed
@@ -100,6 +101,22 @@ def _bind(name: str, model, temperature: float, max_tokens: int):
     return model.bind(temperature=temperature, max_tokens=max_tokens)
 
 
+def _invoke_with_fallback(
+    providers: list[tuple[str, Any]], temperature: float, max_tokens: int, prompt: str
+) -> tuple[str, str]:
+    """Try each provider in order; only a rate-limit error advances to the next one."""
+    last_error: RateLimitError | None = None
+    for name, model in providers:
+        try:
+            bound = _bind(name, model, temperature, max_tokens)
+            return name, _text(bound.invoke(prompt))
+        except RateLimitError as e:
+            logger.warning("provider_rate_limited", provider=name)
+            last_error = e
+            continue
+    raise last_error if last_error else RuntimeError("no LLM providers configured")
+
+
 def _build_prompt(
     instructions: str, context: str, question: str, history: str = ""
 ) -> str:
@@ -165,13 +182,16 @@ def answer(
     retrieved = vector_search(collection_name, query_vector, top_k=top_k)
     context = build_context(retrieved)
     prompt = _build_prompt(instructions, context, question, history)
-    response = _text(_bound_llm(temperature, max_tokens).invoke(prompt))
+    model_used, response = _invoke_with_fallback(
+        _PROVIDERS, temperature, max_tokens, prompt
+    )
     latency_ms = int((time.time() - start) * 1000)
 
     return {
         "answer": response,
         "sources": build_sources(retrieved),
         "latency_ms": latency_ms,
+        "model_used": model_used,
     }
 
 

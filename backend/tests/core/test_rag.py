@@ -1,10 +1,22 @@
+import httpx
+import pytest
+from openai import RateLimitError
+
 from app.core.config import settings
 from app.core.rag import (
     _DEFAULT_INSTRUCTIONS,
     _bind,
     _build_prompt,
     _build_providers,
+    _invoke_with_fallback,
 )
+
+
+def _rate_limit_error() -> RateLimitError:
+    response = httpx.Response(
+        status_code=429, request=httpx.Request("POST", "https://example.com")
+    )
+    return RateLimitError("rate limited", response=response, body=None)
 
 
 class _FakeModel:
@@ -93,3 +105,23 @@ def test_default_instructions_has_no_context_placeholder():
 
 def test_default_instructions_mentions_context():
     assert "context" in _DEFAULT_INSTRUCTIONS.lower()
+
+
+def test_invoke_with_fallback_falls_back_on_rate_limit():
+    groq = _FakeModel(error=_rate_limit_error())
+    ollama = _FakeModel(response="final answer")
+    providers = [("groq", groq), ("ollama", ollama)]
+
+    name, response = _invoke_with_fallback(providers, 0.1, 1024, "prompt")
+
+    assert name == "ollama"
+    assert response == "final answer"
+
+
+def test_invoke_with_fallback_propagates_non_rate_limit_error():
+    groq = _FakeModel(error=ValueError("boom"))
+    ollama = _FakeModel(response="never reached")
+    providers = [("groq", groq), ("ollama", ollama)]
+
+    with pytest.raises(ValueError, match="boom"):
+        _invoke_with_fallback(providers, 0.1, 1024, "prompt")
