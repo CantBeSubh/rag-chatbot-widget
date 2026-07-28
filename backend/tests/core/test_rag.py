@@ -81,6 +81,23 @@ def test_build_providers_includes_configured_cloud_provider(monkeypatch):
     assert [name for name, _ in providers] == ["groq", "ollama"]
 
 
+def test_build_providers_orders_full_chain_when_all_cloud_keys_set(monkeypatch):
+    monkeypatch.setattr(settings, "GROQ_API_KEY", "fake-key")
+    monkeypatch.setattr(settings, "CEREBRAS_API_KEY", "fake-key")
+    monkeypatch.setattr(settings, "OPENROUTER_API_KEY", "fake-key")
+    monkeypatch.setattr(settings, "GOOGLE_API_KEY", "fake-key")
+
+    providers = _build_providers()
+
+    assert [name for name, _ in providers] == [
+        "groq",
+        "cerebras",
+        "openrouter",
+        "google",
+        "ollama",
+    ]
+
+
 def test_build_prompt_starts_with_instructions():
     prompt = _build_prompt("Be concise.", "Some context.", "What is X?")
     assert prompt.startswith("Be concise.")
@@ -114,6 +131,24 @@ def test_invoke_with_fallback_falls_back_on_rate_limit():
     groq = _FakeModel(error=_rate_limit_error())
     ollama = _FakeModel(response="final answer")
     providers = [("groq", groq), ("ollama", ollama)]
+
+    name, response = _invoke_with_fallback(providers, 0.1, 1024, "prompt")
+
+    assert name == "ollama"
+    assert response == "final answer"
+
+
+def test_invoke_with_fallback_falls_back_through_all_cloud_providers_to_ollama():
+    groq = _FakeModel(error=_rate_limit_error())
+    cerebras = _FakeModel(error=_rate_limit_error())
+    openrouter = _FakeModel(error=_rate_limit_error())
+    ollama = _FakeModel(response="final answer")
+    providers = [
+        ("groq", groq),
+        ("cerebras", cerebras),
+        ("openrouter", openrouter),
+        ("ollama", ollama),
+    ]
 
     name, response = _invoke_with_fallback(providers, 0.1, 1024, "prompt")
 

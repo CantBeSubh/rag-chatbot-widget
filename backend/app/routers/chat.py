@@ -4,6 +4,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
+from starlette.concurrency import run_in_threadpool
 
 from ..core.config import settings
 from ..core.database import supabase
@@ -40,7 +41,9 @@ async def chat(
     collection_name = f"tenant_{tenant_id.replace('-', '')}"
     llm_config = widget_config.get("llm_config")
     messages = [m.model_dump() for m in body.messages]
-    result = answer(messages, collection_name, llm_config=llm_config)
+    result = await run_in_threadpool(
+        answer, messages, collection_name, llm_config=llm_config
+    )
     supabase.schema(settings.SUPABASE_SCHEMA).table("chat_logs").insert(
         {
             "tenant_id": tenant_id,

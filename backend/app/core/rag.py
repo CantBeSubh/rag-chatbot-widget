@@ -33,6 +33,8 @@ def _build_providers() -> list[tuple[str, Any]]:
                     base_url="https://api.groq.com/openai/v1",
                     api_key=settings.GROQ_API_KEY,
                     model=settings.LANGCHAIN_GROQ_MODEL,
+                    timeout=20,
+                    max_retries=0,
                 ),
             )
         )
@@ -44,6 +46,8 @@ def _build_providers() -> list[tuple[str, Any]]:
                     base_url="https://api.cerebras.ai/v1",
                     api_key=settings.CEREBRAS_API_KEY,
                     model=settings.LANGCHAIN_CEREBRAS_MODEL,
+                    timeout=20,
+                    max_retries=0,
                 ),
             )
         )
@@ -55,6 +59,8 @@ def _build_providers() -> list[tuple[str, Any]]:
                     base_url="https://openrouter.ai/api/v1",
                     api_key=settings.OPENROUTER_API_KEY,
                     model=settings.LANGCHAIN_OPENROUTER_MODEL,
+                    timeout=20,
+                    max_retries=0,
                 ),
             )
         )
@@ -66,6 +72,8 @@ def _build_providers() -> list[tuple[str, Any]]:
                     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
                     api_key=settings.GOOGLE_API_KEY,
                     model=settings.LANGCHAIN_GOOGLE_MODEL,
+                    timeout=20,
+                    max_retries=0,
                 ),
             )
         )
