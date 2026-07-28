@@ -20,3 +20,7 @@ format:
 
 worker:
 	uv run celery -A app.worker.celery_app worker --loglevel=info --pool=solo
+
+redis:
+	docker run --name my-redis -d -p 6379:6379 redis \
+		redis-server --user admin on ">admin" "~*" "&*" +@all
