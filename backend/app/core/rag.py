@@ -9,7 +9,7 @@ from .config import settings
 from .embedder import embed
 from .vector_store import vector_search
 
-if settings.ENVIRONMENT == "development":
+if True or settings.ENVIRONMENT == "development":
     llm = OllamaLLM(
         model=settings.LANGCHAIN_OLLAMA_MODEL,
         temperature=0.1,
