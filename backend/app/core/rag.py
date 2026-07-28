@@ -45,8 +45,8 @@ def _text(chunk) -> str:
 def _bound_llm(temperature: float, max_tokens: int):
     """Return a per-call RunnableBinding without mutating the global llm."""
     if settings.ENVIRONMENT == "development":
-        return llm.bind(temperature=temperature, num_predict=max_tokens)
-    return llm.bind(temperature=temperature, max_tokens=max_tokens)
+        return llm.bind(options={"temperature": temperature, "num_predict": max_tokens})
+    return llm.bind(options={"temperature": temperature, "num_predict": max_tokens})
 
 
 def _build_prompt(
