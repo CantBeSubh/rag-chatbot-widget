@@ -17,8 +17,17 @@ class Settings(BaseSettings):
     LANGCHAIN_OLLAMA_BASE_URL: str = "http://localhost:11434"
     LANGCHAIN_OLLAMA_MODEL: str = "llama3.1:8b"
 
-    HF_TOKEN: str = ""
-    LANGCHAIN_HUGGINGFACE_MODEL: str = "zai-org/GLM-5.2"
+    GROQ_API_KEY: str = ""
+    LANGCHAIN_GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
+    CEREBRAS_API_KEY: str = ""
+    LANGCHAIN_CEREBRAS_MODEL: str = "gpt-oss-120b"
+
+    OPENROUTER_API_KEY: str = ""
+    LANGCHAIN_OPENROUTER_MODEL: str = "openai/gpt-oss-20b:free"
+
+    GOOGLE_API_KEY: str = ""
+    LANGCHAIN_GOOGLE_MODEL: str = "gemini-2.5-flash-lite"
 
     SECRET_KEY: str = ""
     ENVIRONMENT: str = "development"

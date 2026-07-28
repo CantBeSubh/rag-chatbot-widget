@@ -2,29 +2,19 @@ import json
 import time
 from collections.abc import AsyncIterator
 
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langchain_ollama import OllamaLLM
 
 from .config import settings
 from .embedder import embed
 from .vector_store import vector_search
 
-if True or settings.ENVIRONMENT == "development":
-    llm = OllamaLLM(
-        model=settings.LANGCHAIN_OLLAMA_MODEL,
-        temperature=0.1,
-        base_url=settings.LANGCHAIN_OLLAMA_BASE_URL,
-        num_ctx=8192,
-    )
-else:
-    llm = ChatHuggingFace(
-        llm=HuggingFaceEndpoint(
-            repo_id=settings.LANGCHAIN_HUGGINGFACE_MODEL,
-            task="text-generation",
-            provider="auto",
-            huggingfacehub_api_token=settings.HF_TOKEN,
-        )
-    )
+# TODO (Task 2-4): Replace with fallback chain: Groq -> Cerebras -> OpenRouter -> Google AI Studio -> Ollama
+llm = OllamaLLM(
+    model=settings.LANGCHAIN_OLLAMA_MODEL,
+    temperature=0.1,
+    base_url=settings.LANGCHAIN_OLLAMA_BASE_URL,
+    num_ctx=8192,
+)
 
 _DEFAULT_INSTRUCTIONS = (
     "You are a helpful assistant. Answer the user's question using ONLY the context "
@@ -44,8 +34,6 @@ def _text(chunk) -> str:
 
 def _bound_llm(temperature: float, max_tokens: int):
     """Return a per-call RunnableBinding without mutating the global llm."""
-    if settings.ENVIRONMENT == "development":
-        return llm.bind(options={"temperature": temperature, "num_predict": max_tokens})
     return llm.bind(options={"temperature": temperature, "num_predict": max_tokens})
 
 
