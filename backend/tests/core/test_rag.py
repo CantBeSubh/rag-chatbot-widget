@@ -1,4 +1,69 @@
-from app.core.rag import _DEFAULT_INSTRUCTIONS, _build_prompt
+from app.core.config import settings
+from app.core.rag import (
+    _DEFAULT_INSTRUCTIONS,
+    _bind,
+    _build_prompt,
+    _build_providers,
+)
+
+
+class _FakeModel:
+    """Mimics a LangChain chat model: .bind(**kwargs) returns a runnable with
+    .invoke()/.astream()."""
+
+    def __init__(self, response=None, error=None):
+        self.response = response
+        self.error = error
+        self.bind_kwargs = None
+
+    def bind(self, **kwargs):
+        self.bind_kwargs = kwargs
+        return self
+
+    def invoke(self, _prompt):
+        if self.error is not None:
+            raise self.error
+        return self.response
+
+    async def astream(self, _prompt):
+        if self.error is not None:
+            raise self.error
+        for token in self.response:
+            yield token
+
+
+def test_bind_ollama_uses_options_kwarg():
+    model = _FakeModel()
+    _bind("ollama", model, 0.2, 500)
+    assert model.bind_kwargs == {"options": {"temperature": 0.2, "num_predict": 500}}
+
+
+def test_bind_cloud_provider_uses_top_level_kwargs():
+    model = _FakeModel()
+    _bind("groq", model, 0.2, 500)
+    assert model.bind_kwargs == {"temperature": 0.2, "max_tokens": 500}
+
+
+def test_build_providers_skips_provider_with_empty_api_key(monkeypatch):
+    monkeypatch.setattr(settings, "GROQ_API_KEY", "")
+    monkeypatch.setattr(settings, "CEREBRAS_API_KEY", "")
+    monkeypatch.setattr(settings, "OPENROUTER_API_KEY", "")
+    monkeypatch.setattr(settings, "GOOGLE_API_KEY", "")
+
+    providers = _build_providers()
+
+    assert [name for name, _ in providers] == ["ollama"]
+
+
+def test_build_providers_includes_configured_cloud_provider(monkeypatch):
+    monkeypatch.setattr(settings, "GROQ_API_KEY", "fake-key")
+    monkeypatch.setattr(settings, "CEREBRAS_API_KEY", "")
+    monkeypatch.setattr(settings, "OPENROUTER_API_KEY", "")
+    monkeypatch.setattr(settings, "GOOGLE_API_KEY", "")
+
+    providers = _build_providers()
+
+    assert [name for name, _ in providers] == ["groq", "ollama"]
 
 
 def test_build_prompt_starts_with_instructions():

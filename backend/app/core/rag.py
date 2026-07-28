@@ -1,20 +1,78 @@
 import json
 import time
 from collections.abc import AsyncIterator
+from typing import Any
 
 from langchain_ollama import OllamaLLM
+from langchain_openai import ChatOpenAI
 
 from .config import settings
 from .embedder import embed
+from .logging import get_logger
 from .vector_store import vector_search
 
-# TODO (Task 2-4): Replace with fallback chain (Groq, Cerebras, OpenRouter, Google)
+logger = get_logger()
+
 llm = OllamaLLM(
     model=settings.LANGCHAIN_OLLAMA_MODEL,
     temperature=0.1,
     base_url=settings.LANGCHAIN_OLLAMA_BASE_URL,
     num_ctx=8192,
 )
+
+
+def _build_providers() -> list[tuple[str, Any]]:
+    """Ordered fallback chain: configured cloud providers, then Ollama last."""
+    providers: list[tuple[str, Any]] = []
+    if settings.GROQ_API_KEY:
+        providers.append(
+            (
+                "groq",
+                ChatOpenAI(
+                    base_url="https://api.groq.com/openai/v1",
+                    api_key=settings.GROQ_API_KEY,
+                    model=settings.LANGCHAIN_GROQ_MODEL,
+                ),
+            )
+        )
+    if settings.CEREBRAS_API_KEY:
+        providers.append(
+            (
+                "cerebras",
+                ChatOpenAI(
+                    base_url="https://api.cerebras.ai/v1",
+                    api_key=settings.CEREBRAS_API_KEY,
+                    model=settings.LANGCHAIN_CEREBRAS_MODEL,
+                ),
+            )
+        )
+    if settings.OPENROUTER_API_KEY:
+        providers.append(
+            (
+                "openrouter",
+                ChatOpenAI(
+                    base_url="https://openrouter.ai/api/v1",
+                    api_key=settings.OPENROUTER_API_KEY,
+                    model=settings.LANGCHAIN_OPENROUTER_MODEL,
+                ),
+            )
+        )
+    if settings.GOOGLE_API_KEY:
+        providers.append(
+            (
+                "google",
+                ChatOpenAI(
+                    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+                    api_key=settings.GOOGLE_API_KEY,
+                    model=settings.LANGCHAIN_GOOGLE_MODEL,
+                ),
+            )
+        )
+    providers.append(("ollama", llm))
+    return providers
+
+
+_PROVIDERS = _build_providers()
 
 _DEFAULT_INSTRUCTIONS = (
     "You are a helpful assistant. Answer the user's question using ONLY the context "
@@ -32,9 +90,14 @@ def _text(chunk) -> str:
     return chunk.content if hasattr(chunk, "content") else chunk
 
 
-def _bound_llm(temperature: float, max_tokens: int):
-    """Return a per-call RunnableBinding without mutating the global llm."""
-    return llm.bind(options={"temperature": temperature, "num_predict": max_tokens})
+def _bind(name: str, model, temperature: float, max_tokens: int):
+    """Return a per-call RunnableBinding without mutating the shared provider
+    instance."""
+    if name == "ollama":
+        return model.bind(
+            options={"temperature": temperature, "num_predict": max_tokens}
+        )
+    return model.bind(temperature=temperature, max_tokens=max_tokens)
 
 
 def _build_prompt(
