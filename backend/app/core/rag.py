@@ -5,7 +5,7 @@ from typing import Any
 
 from langchain_ollama import OllamaLLM
 from langchain_openai import ChatOpenAI
-from openai import RateLimitError
+from openai import APIError
 
 from .config import settings
 from .embedder import embed
@@ -125,14 +125,15 @@ def _bind(name: str, model, temperature: float, max_tokens: int):
 def _invoke_with_fallback(
     providers: list[tuple[str, Any]], temperature: float, max_tokens: int, prompt: str
 ) -> tuple[str, str]:
-    """Try each provider in order; only a rate-limit error advances to the next one."""
-    last_error: RateLimitError | None = None
+    """Try each provider in order; any OpenAI API error (rate limit, timeout,
+    connection failure, 5xx, ...) advances to the next one."""
+    last_error: APIError | None = None
     for name, model in providers:
         try:
             bound = _bind(name, model, temperature, max_tokens)
             return name, _text(bound.invoke(prompt))
-        except RateLimitError as e:
-            logger.warning("provider_rate_limited", provider=name)
+        except APIError as e:
+            logger.warning("provider_failed", provider=name, error=str(e))
             last_error = e
             continue
     raise last_error if last_error else RuntimeError("no LLM providers configured")
@@ -142,9 +143,9 @@ async def _astream_with_fallback(
     providers: list[tuple[str, Any]], temperature: float, max_tokens: int, prompt: str
 ) -> AsyncIterator[tuple[str, str]]:
     """Yield (provider_name, token) pairs. Falls back only before the first
-    token of a given provider; a rate limit after streaming has started
+    token of a given provider; an API error after streaming has started
     propagates instead of switching providers mid-answer."""
-    last_error: RateLimitError | None = None
+    last_error: APIError | None = None
     for name, model in providers:
         bound = _bind(name, model, temperature, max_tokens)
         started = False
@@ -153,10 +154,10 @@ async def _astream_with_fallback(
                 started = True
                 yield name, _text(chunk)
             return
-        except RateLimitError as e:
+        except APIError as e:
             if started:
                 raise
-            logger.warning("provider_rate_limited", provider=name)
+            logger.warning("provider_failed", provider=name, error=str(e))
             last_error = e
             continue
     raise last_error if last_error else RuntimeError("no LLM providers configured")

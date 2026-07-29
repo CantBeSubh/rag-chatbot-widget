@@ -1,5 +1,30 @@
 # Dev Log
 
+## 2026-07-29 — Fallback loops now advance on any `openai.APIError`, not just rate limits
+
+Hit the exact gap parked as a "known follow-up" in the 2026-07-28 entry below:
+NVIDIA (first in the chain) hit a read timeout mid-request, `openai` raised
+`APITimeoutError`, and since `_invoke_with_fallback`/`_astream_with_fallback`
+only caught `RateLimitError`, it propagated straight through the SSE stream
+as an unhandled `ExceptionGroup` — crashing the whole request even though
+Groq/Cerebras/OpenRouter/Google/Ollama were all configured and healthy right
+behind it.
+
+Fix: both loops now catch `openai.APIError` (the SDK's common base for
+`RateLimitError`, `APITimeoutError`, `APIConnectionError`,
+`InternalServerError`, etc.) instead of just `RateLimitError`. The
+"don't switch providers mid-stream" rule in `_astream_with_fallback` is
+unchanged — it still only falls back before a given provider's first token,
+regardless of which `APIError` subclass triggered it. Log field renamed
+`provider_rate_limited` → `provider_failed` (now includes `error=str(e)`
+since the failure reason is no longer implied by the event name alone).
+
+Not revisited: whether provider-specific 4xx errors (bad API key, unknown
+model) *should* also fall through silently to the next provider, versus
+surfacing immediately as a config bug — `APIError` covers both, so a
+misconfigured provider now degrades quietly instead of failing loudly. Worth
+a second look if a bad key ever masks itself this way.
+
 ## 2026-07-28 — Fallback model chain for `rag.py` (Groq → Cerebras → OpenRouter → Google AI Studio → Ollama)
 
 Replaced the single hard-coded Ollama LLM call with an ordered fallback chain.
