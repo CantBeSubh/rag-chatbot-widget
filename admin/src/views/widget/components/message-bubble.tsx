@@ -50,7 +50,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
     <div className={cn("flex w-full", isUser ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-[85%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed",
+          "max-w-[85%] min-w-0 break-words rounded-xl px-3.5 py-2.5 text-sm leading-relaxed",
           isUser
             ? "rounded-br-sm bg-primary text-primary-foreground"
             : "rounded-bl-sm bg-muted text-foreground",
